@@ -158,3 +158,9 @@ class CandidateResponse(BaseModel):
 
     mode: Literal["candidate"] = "candidate"
     prep: PrepBundle
+
+
+class ExtractPdfResponse(BaseModel):
+    """Output of POST /v1/extract-pdf."""
+
+    text: str

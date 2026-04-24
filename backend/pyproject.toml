@@ -12,6 +12,7 @@ dependencies = [
     "litellm>=1.81.0",
     "mcp>=1.0.0",
     "httpx>=0.28.1",
+    "pypdf>=5.1.0",
     "python-dotenv>=1.0.0",
 ]
 
