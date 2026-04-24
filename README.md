@@ -37,26 +37,39 @@ Dual-mode AI tool built on Google ADK v2. Paste a CV and a Job Description, pick
 
 ```mermaid
 flowchart TD
-    A["CV + JD + mode"] --> B1[CV Parser]
-    A --> B2[JD Parser]
-    B1 --> J1[parse_join]
-    B2 --> J1
-    J1 --> C{Mode Router}
+    IN(["CV + JD + mode"]):::io
 
-    C -->|recruiter| D[Fit Analyzer]
-    C -->|candidate| E["Research Agent<br/>Tavily MCP"]
+    IN --> CV[CV Parser]:::agent
+    IN --> JD[JD Parser]:::agent
+    CV --> PJ[/parse_join/]:::code
+    JD --> PJ
+    PJ --> MR{Mode Router}:::code
 
-    D --> F{Verdict Router}
-    F -->|fit / borderline| G["Outreach Writer<br/>medium reasoning"]
-    F -->|no_fit| H[Gap Explainer]
+    MR -- recruiter --> FA[Fit Analyzer]:::agent
+    MR -- candidate --> RA[Research Agent]:::agent
 
-    E --> I[Interview Prep]
+    FA --> VR{Verdict Router}:::code
+    VR -- fit / borderline --> OW["Outreach Writer<br/><i>medium reasoning</i>"]:::agent
+    VR -- no_fit --> GE[Gap Explainer]:::agent
 
-    style G fill:#e8f4fd,stroke:#185FA5
-    style E fill:#e8f4fd,stroke:#185FA5
+    RA --> IP[Interview Prep]:::agent
+
+    TV((Tavily MCP)):::tool
+    TV -. tavily-search<br/>tavily-extract .-> RA
+
+    OW --> OUT1(["RecruiterFitResponse"]):::io
+    GE --> OUT2(["RecruiterNoFitResponse"]):::io
+    IP --> OUT3(["CandidateResponse"]):::io
+
+    classDef agent fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1
+    classDef code fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20
+    classDef tool fill:#FFF3E0,stroke:#E65100,stroke-width:2px,stroke-dasharray:6 4,color:#BF360C
+    classDef io fill:#F5F5F5,stroke:#616161,stroke-width:1px,color:#212121
 ```
 
-CV and JD are parsed in parallel (independent extractions — halves preprocessing latency). `parse_join` synchronizes before the mode split. The `is_likely_agency_posting` signal is set during JD parsing (lexical hints) and confirmed by the Research Agent (web-sourced) in candidate mode.
+**Legend** — blue: LLM agents · green: pure-Python nodes (routers, join) · orange (dashed): external tools via MCP · grey: HTTP I/O.
+
+CV and JD are parsed in parallel (independent extractions — halves preprocessing latency). `parse_join` synchronizes before the mode split. The `is_likely_agency_posting` signal is set during JD parsing (lexical hints) and confirmed by the Research Agent (web-sourced via Tavily) in candidate mode.
 
 ## Architecture
 

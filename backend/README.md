@@ -59,14 +59,39 @@ Each HTTP request gets a brand-new session — no cross-request state contaminat
 
 ## Graph
 
+```mermaid
+flowchart TD
+    IN(["CV + JD + mode"]):::io
+
+    IN --> CV[cv_parser]:::agent
+    IN --> JD[jd_parser]:::agent
+    CV --> PJ[/parse_join/]:::code
+    JD --> PJ
+    PJ --> MR{mode_router}:::code
+
+    MR -- RECRUITER --> FA[fit_analyzer]:::agent
+    MR -- CANDIDATE --> RA[research_agent]:::agent
+
+    FA --> VR{verdict_router}:::code
+    VR -- OUTREACH --> OW[outreach_writer]:::agent
+    VR -- GAP --> GE[gap_explainer]:::agent
+
+    RA --> IP[interview_prep]:::agent
+
+    TV((Tavily MCP)):::tool
+    TV -. tavily-search<br/>tavily-extract .-> RA
+
+    OW --> OUT1(["RecruiterFitResponse"]):::io
+    GE --> OUT2(["RecruiterNoFitResponse"]):::io
+    IP --> OUT3(["CandidateResponse"]):::io
+
+    classDef agent fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1
+    classDef code fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20
+    classDef tool fill:#FFF3E0,stroke:#E65100,stroke-width:2px,stroke-dasharray:6 4,color:#BF360C
+    classDef io fill:#F5F5F5,stroke:#616161,stroke-width:1px,color:#212121
 ```
-START ──► cv_parser ──┐
-      └► jd_parser ──┴─► parse_join ──► mode_router
-                                          ├─ RECRUITER ──► fit_analyzer ──► verdict_router
-                                          │                                   ├─ OUTREACH ──► outreach_writer
-                                          │                                   └─ GAP      ──► gap_explainer
-                                          └─ CANDIDATE ──► research_agent ──► interview_prep
-```
+
+Blue: LLM agents · green: pure-Python nodes (`FunctionNode` routers, `JoinNode`) · orange dashed: external tools via MCP · grey: HTTP I/O.
 
 See `app/agent/agent.py` for the actual `edges=[...]`.
 
