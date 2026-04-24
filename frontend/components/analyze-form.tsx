@@ -53,19 +53,20 @@ export function AnalyzeForm({
         {isCompact ? (
           <header className="flex items-center justify-between gap-2">
             <span className="text-sm font-semibold tracking-tight">
-              career-copilot
+              Career Copilot
             </span>
           </header>
         ) : (
-          <header className="flex flex-col items-center gap-3 text-center">
+          <header className="flex flex-col items-center gap-4 text-center">
             <h1 className="text-balance text-4xl font-semibold tracking-tight md:text-5xl">
-              career-copilot
+              Career Copilot
             </h1>
             <p className="text-muted-foreground max-w-md text-sm leading-relaxed md:text-base">
               Recruiters: score a candidate&apos;s fit and draft outreach.
               <br />
               Candidates: research the company and build interview prep.
             </p>
+            <StackBadges />
           </header>
         )}
 
@@ -124,11 +125,6 @@ export function AnalyzeForm({
           </Button>
         </form>
 
-        {!isCompact && (
-          <footer className="text-muted-foreground mt-auto pt-8 text-center text-[11px] leading-relaxed">
-            Google ADK v2 · OpenAI gpt-5.4-mini · Tavily MCP
-          </footer>
-        )}
       </div>
     </div>
   );
@@ -148,5 +144,44 @@ function Section({
       </span>
       {children}
     </div>
+  );
+}
+
+// Shields.io-style two-tone badges — same visual as the GitHub README.
+const STACK: Array<{ label: string; value: string; color: string }> = [
+  { label: "Python", value: "3.12", color: "#3776AB" },
+  { label: "Google ADK", value: "v2", color: "#4285F4" },
+  { label: "Cloud", value: "GCP", color: "#1A73E8" },
+  { label: "Tavily", value: "MCP", color: "#0B7285" },
+  { label: "uv", value: "managed", color: "#DE5FE9" },
+  { label: "Next.js", value: "15", color: "#000000" },
+];
+
+function StackBadges() {
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-1.5 pt-1">
+      {STACK.map((item) => (
+        <Shield key={item.label} {...item} />
+      ))}
+    </div>
+  );
+}
+
+function Shield({
+  label,
+  value,
+  color,
+}: {
+  label: string;
+  value: string;
+  color: string;
+}) {
+  return (
+    <span className="inline-flex overflow-hidden rounded-[3px] text-[10px] leading-none font-semibold shadow-sm">
+      <span className="bg-[#555] px-1.5 py-1 text-white">{label}</span>
+      <span className="px-1.5 py-1 text-white" style={{ backgroundColor: color }}>
+        {value}
+      </span>
+    </span>
   );
 }
