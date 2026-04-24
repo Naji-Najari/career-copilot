@@ -73,7 +73,7 @@ export default function Home() {
         />
       </aside>
       <main className="flex-1 md:overflow-y-auto">
-        <div className="mx-auto max-w-3xl px-4 py-8 md:px-8 md:py-12">
+        <div className="mx-auto max-w-5xl px-4 py-8 md:px-8 md:py-12">
           <AnalyzeResponseView mutation={mutation} />
         </div>
       </main>

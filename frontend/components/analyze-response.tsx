@@ -3,27 +3,19 @@
 import type { UseMutationResult } from "@tanstack/react-query";
 import {
   AlertTriangle,
+  ArrowUpRight,
   BadgeCheck,
   Building2,
   ExternalLink,
   Lightbulb,
   MailCheck,
-  MessageSquare,
   Sparkles,
   TriangleAlert,
 } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import {
   isCandidate,
   isRecruiterFit,
@@ -53,50 +45,46 @@ export function AnalyzeResponseView({ mutation }: { mutation: MutationState }) {
   return <IdleState />;
 }
 
+// ---------------------------------------------------------------------------
+// States
+// ---------------------------------------------------------------------------
+
 function IdleState() {
   return (
-    <Card className="h-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Sparkles className="text-muted-foreground size-5" />
-          Agent response
-        </CardTitle>
-        <CardDescription>
-          Fill the form on the left and click Analyze. The agent output will
-          appear here.
-        </CardDescription>
-      </CardHeader>
+    <Card>
+      <CardHeader icon={Sparkles} title="Agent response" />
+      <p className="text-muted-foreground text-sm leading-relaxed">
+        Fill the form on the left and click Analyze. The agent output will
+        appear here.
+      </p>
     </Card>
   );
 }
 
 function LoadingState() {
   return (
-    <div className="flex flex-col gap-4">
+    <ResponseGrid>
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Sparkles className="text-muted-foreground size-5 animate-pulse" />
-            Running the agent...
-          </CardTitle>
-          <CardDescription>
-            This can take up to ~15 seconds in candidate mode (Tavily research).
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-3">
-          <Skeleton className="h-4 w-3/4" />
-          <Skeleton className="h-4 w-2/3" />
-          <Skeleton className="h-4 w-5/6" />
-        </CardContent>
+        <CardHeader icon={Sparkles} title="Running the agent" />
+        <p className="text-muted-foreground mb-4 text-sm leading-relaxed">
+          This can take up to ~15 seconds in candidate mode (Tavily research).
+        </p>
+        <div className="flex flex-col gap-3">
+          <Skeleton className="h-3 w-3/4" />
+          <Skeleton className="h-3 w-2/3" />
+          <Skeleton className="h-3 w-5/6" />
+        </div>
       </Card>
       <Card>
-        <CardContent className="flex flex-col gap-3 py-6">
-          <Skeleton className="h-4 w-1/2" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-4/5" />
-        </CardContent>
+        <CardHeader icon={Sparkles} title="Preparing output" />
+        <div className="flex flex-col gap-3">
+          <Skeleton className="h-3 w-1/2" />
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-3 w-4/5" />
+          <Skeleton className="h-3 w-3/5" />
+        </div>
       </Card>
-    </div>
+    </ResponseGrid>
   );
 }
 
@@ -108,8 +96,8 @@ function ErrorState({ message }: { message: string }) {
       <AlertDescription>
         <p>{message}</p>
         <p className="text-muted-foreground mt-1 text-xs">
-          Check that the backend is running at the URL in{" "}
-          <code>NEXT_PUBLIC_API_URL</code>.
+          Check that the backend is running and reachable from the Next.js
+          server (see <code>BACKEND_URL</code>).
         </p>
       </AlertDescription>
     </Alert>
@@ -123,78 +111,71 @@ function SuccessState({ data }: { data: AnalyzeResponse }) {
   return null;
 }
 
-// ---------- Recruiter: fit / borderline ----------
+// ---------------------------------------------------------------------------
+// Mode views — side-by-side cards
+// ---------------------------------------------------------------------------
 
 function RecruiterFitView({ data }: { data: RecruiterFitResponse }) {
   return (
-    <div className="flex flex-col gap-4">
+    <ResponseGrid>
       <VerdictCard verdict={data.verdict} />
       <OutreachCard outreach={data.outreach} />
-    </div>
+    </ResponseGrid>
   );
 }
-
-// ---------- Recruiter: no_fit ----------
 
 function RecruiterNoFitView({ data }: { data: RecruiterNoFitResponse }) {
   return (
-    <div className="flex flex-col gap-4">
+    <ResponseGrid>
       <VerdictCard verdict={data.verdict} />
       <GapCard gap={data.gap} />
-    </div>
+    </ResponseGrid>
   );
 }
-
-// ---------- Candidate ----------
 
 function CandidateView({ data }: { data: CandidateResponse }) {
   return (
-    <div className="flex flex-col gap-4">
+    <ResponseGrid>
       <CompanyCard company={data.prep.company} />
       <InterviewPrepCard prep={data.prep.interview_prep} />
-    </div>
+    </ResponseGrid>
   );
 }
 
-// ---------- Sub-cards ----------
-
-function verdictBadgeVariant(v: FitVerdict["verdict"]) {
-  switch (v) {
-    case "fit":
-      return "default" as const;
-    case "borderline":
-      return "secondary" as const;
-    case "no_fit":
-      return "destructive" as const;
-  }
-}
+// ---------------------------------------------------------------------------
+// Cards
+// ---------------------------------------------------------------------------
 
 function VerdictCard({ verdict }: { verdict: FitVerdict }) {
+  const tone =
+    verdict.verdict === "fit"
+      ? "emerald"
+      : verdict.verdict === "borderline"
+        ? "amber"
+        : "rose";
+
   return (
     <Card>
-      <CardHeader>
-        <div className="flex flex-wrap items-center gap-2">
-          <CardTitle className="flex items-center gap-2">
-            <BadgeCheck className="text-muted-foreground size-5" />
-            Fit verdict
-          </CardTitle>
-          <Badge variant={verdictBadgeVariant(verdict.verdict)}>
-            {verdict.verdict.replace("_", " ")}
-          </Badge>
-          <span className="text-muted-foreground text-xs">
-            confidence {verdict.confidence}/10
-          </span>
-        </div>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <p className="text-sm leading-relaxed">{verdict.notes}</p>
-        {verdict.matched_evidence.length > 0 && (
-          <BulletList title="Matched evidence" items={verdict.matched_evidence} />
-        )}
-        {verdict.gaps.length > 0 && (
-          <BulletList title="Gaps" items={verdict.gaps} />
-        )}
-      </CardContent>
+      <CardHeader
+        icon={BadgeCheck}
+        title="Fit verdict"
+        meta={
+          <VerdictPill verdict={verdict.verdict} confidence={verdict.confidence} />
+        }
+      />
+      <p className="text-muted-foreground mb-4 text-sm leading-relaxed">
+        {verdict.notes}
+      </p>
+      {verdict.matched_evidence.length > 0 && (
+        <SubSection title="Matched evidence" className="mb-4">
+          <BulletList items={verdict.matched_evidence} tone={tone} />
+        </SubSection>
+      )}
+      {verdict.gaps.length > 0 && (
+        <SubSection title="Gaps">
+          <BulletList items={verdict.gaps} />
+        </SubSection>
+      )}
     </Card>
   );
 }
@@ -202,24 +183,18 @@ function VerdictCard({ verdict }: { verdict: FitVerdict }) {
 function OutreachCard({ outreach }: { outreach: OutreachDraft }) {
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MailCheck className="text-muted-foreground size-5" />
-          {outreach.subject_line}
-        </CardTitle>
-        <CardDescription>Outreach draft — ready to send.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <pre className="text-sm leading-relaxed whitespace-pre-wrap font-sans">
-          {outreach.body}
-        </pre>
-      </CardContent>
-      <CardFooter className="border-t pt-4">
-        <p className="text-muted-foreground text-xs">
-          <span className="font-medium">Cited achievement:</span>{" "}
+      <CardHeader icon={MailCheck} title={outreach.subject_line} />
+      <pre className="text-foreground/90 mb-4 text-sm leading-relaxed whitespace-pre-wrap font-sans">
+        {outreach.body}
+      </pre>
+      <div className="border-border border-t pt-3">
+        <p className="text-muted-foreground text-xs leading-relaxed">
+          <span className="text-foreground/80 font-semibold">
+            Cited achievement:
+          </span>{" "}
           {outreach.referenced_achievement}
         </p>
-      </CardFooter>
+      </div>
     </Card>
   );
 }
@@ -227,31 +202,24 @@ function OutreachCard({ outreach }: { outreach: OutreachDraft }) {
 function GapCard({ gap }: { gap: GapReport }) {
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <AlertTriangle className="text-muted-foreground size-5" />
-          Gap report
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <BulletList title="Gaps" items={gap.gaps} />
-        <div>
-          <h4 className="mb-1 text-sm font-medium">Why this isn't a fit</h4>
-          <p className="text-sm leading-relaxed">{gap.explanation}</p>
-        </div>
-        {gap.adjacent_roles.length > 0 && (
-          <div>
-            <h4 className="mb-2 text-sm font-medium">Adjacent roles to consider</h4>
-            <div className="flex flex-wrap gap-2">
-              {gap.adjacent_roles.map((role) => (
-                <Badge key={role} variant="outline">
-                  {role}
-                </Badge>
-              ))}
-            </div>
+      <CardHeader icon={AlertTriangle} title="Gap report" />
+      <SubSection title="Gaps" className="mb-4">
+        <BulletList items={gap.gaps} />
+      </SubSection>
+      <SubSection title="Why this isn't a fit" className="mb-4">
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          {gap.explanation}
+        </p>
+      </SubSection>
+      {gap.adjacent_roles.length > 0 && (
+        <SubSection title="Adjacent roles to consider">
+          <div className="flex flex-wrap gap-2">
+            {gap.adjacent_roles.map((role) => (
+              <Pill key={role}>{role}</Pill>
+            ))}
           </div>
-        )}
-      </CardContent>
+        </SubSection>
+      )}
     </Card>
   );
 }
@@ -263,73 +231,70 @@ function CompanyCard({
 }) {
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Building2 className="text-muted-foreground size-5" />
-          {company.company_name}
-        </CardTitle>
-        {company.funding_stage && (
-          <CardDescription>{company.funding_stage}</CardDescription>
-        )}
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        {company.is_likely_agency_posting && (
-          <Alert variant="destructive">
-            <TriangleAlert />
-            <AlertTitle>Agency posting detected</AlertTitle>
-            <AlertDescription>
-              {company.probable_real_employer ? (
-                <p>
-                  Probable real employer:{" "}
-                  <span className="font-medium">
-                    {company.probable_real_employer}
-                  </span>
-                </p>
-              ) : (
-                <p>The real employer could not be identified from the research.</p>
-              )}
-              {company.agency_evidence.length > 0 && (
-                <ul className="mt-1 list-disc pl-4 text-xs">
-                  {company.agency_evidence.map((e, i) => (
-                    <li key={i}>{e}</li>
-                  ))}
-                </ul>
-              )}
-            </AlertDescription>
-          </Alert>
-        )}
-        {company.recent_news.length > 0 && (
-          <BulletList title="Recent news" items={company.recent_news} />
-        )}
-        {company.culture_signals.length > 0 && (
-          <BulletList title="Culture signals" items={company.culture_signals} />
-        )}
-        {company.interview_process_hints.length > 0 && (
-          <BulletList
-            title="Interview process hints"
-            items={company.interview_process_hints}
-          />
-        )}
-        {company.sources.length > 0 && (
-          <div>
-            <h4 className="mb-2 text-sm font-medium">Sources</h4>
-            <div className="flex flex-wrap gap-2">
-              {company.sources.map((url) => (
-                <a
-                  key={url}
-                  href={url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="focus-visible:ring-ring/50 focus-visible:border-ring inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-[3px]"
-                >
-                  <ExternalLink className="size-3" />
-                  {hostFor(url)}
-                </a>
-              ))}
-            </div>
+      <CardHeader
+        icon={Building2}
+        title={company.company_name}
+        meta={
+          company.funding_stage ? (
+            <span className="text-muted-foreground text-xs">
+              {company.funding_stage}
+            </span>
+          ) : null
+        }
+      />
+
+      {company.is_likely_agency_posting && (
+        <Alert variant="destructive" className="mb-4">
+          <TriangleAlert />
+          <AlertTitle>Agency posting detected</AlertTitle>
+          <AlertDescription>
+            {company.probable_real_employer ? (
+              <p>
+                Probable real employer:{" "}
+                <span className="font-medium">
+                  {company.probable_real_employer}
+                </span>
+              </p>
+            ) : (
+              <p>
+                The real employer could not be identified from the research.
+              </p>
+            )}
+            {company.agency_evidence.length > 0 && (
+              <ul className="mt-1 list-disc pl-4 text-xs">
+                {company.agency_evidence.map((e, i) => (
+                  <li key={i}>{e}</li>
+                ))}
+              </ul>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {company.recent_news.length > 0 && (
+        <SubSection title="Recent news" className="mb-4">
+          <BulletList items={company.recent_news} />
+        </SubSection>
+      )}
+      {company.culture_signals.length > 0 && (
+        <SubSection title="Culture signals" className="mb-4">
+          <BulletList items={company.culture_signals} />
+        </SubSection>
+      )}
+      {company.interview_process_hints.length > 0 && (
+        <SubSection title="Interview process hints" className="mb-4">
+          <BulletList items={company.interview_process_hints} />
+        </SubSection>
+      )}
+      {company.sources.length > 0 && (
+        <SubSection title="Sources">
+          <div className="flex flex-wrap gap-2">
+            {company.sources.map((url) => (
+              <SourceLink key={url} url={url} />
+            ))}
           </div>
-        )}
-      </CardContent>
+        </SubSection>
+      )}
     </Card>
   );
 }
@@ -337,57 +302,195 @@ function CompanyCard({
 function InterviewPrepCard({ prep }: { prep: InterviewPrepBundle }) {
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Lightbulb className="text-muted-foreground size-5" />
-          Interview prep
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        {prep.probable_questions.length > 0 && (
-          <BulletList
-            title="Probable questions"
-            items={prep.probable_questions}
-            icon={<MessageSquare className="mt-0.5 size-3.5 shrink-0" />}
-          />
-        )}
-        {prep.talking_points.length > 0 && (
-          <BulletList title="Talking points" items={prep.talking_points} />
-        )}
-        {prep.reverse_questions.length > 0 && (
-          <BulletList
-            title="Smart reverse questions"
-            items={prep.reverse_questions}
-          />
-        )}
-      </CardContent>
+      <CardHeader icon={Lightbulb} title="Interview prep" />
+      {prep.probable_questions.length > 0 && (
+        <SubSection title="Probable questions" className="mb-4">
+          <BulletList items={prep.probable_questions} />
+        </SubSection>
+      )}
+      {prep.talking_points.length > 0 && (
+        <SubSection title="Talking points" className="mb-4">
+          <BulletList items={prep.talking_points} />
+        </SubSection>
+      )}
+      {prep.reverse_questions.length > 0 && (
+        <SubSection title="Smart reverse questions">
+          <BulletList items={prep.reverse_questions} />
+        </SubSection>
+      )}
     </Card>
   );
 }
 
-// ---------- Shared ----------
+// ---------------------------------------------------------------------------
+// Primitives
+// ---------------------------------------------------------------------------
 
-function BulletList({
-  title,
-  items,
-  icon,
+function ResponseGrid({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="grid items-start gap-4 md:grid-cols-2">{children}</div>
+  );
+}
+
+function Card({
+  className,
+  children,
 }: {
-  title: string;
-  items: string[];
-  icon?: React.ReactNode;
+  className?: string;
+  children: React.ReactNode;
 }) {
   return (
-    <div>
-      <h4 className="mb-2 text-sm font-medium">{title}</h4>
-      <ul className="flex flex-col gap-1.5 text-sm leading-relaxed">
-        {items.map((item, i) => (
-          <li key={i} className="flex gap-2">
-            {icon ?? <span className="text-muted-foreground mt-2 size-1 rounded-full bg-current" />}
-            <span>{item}</span>
-          </li>
-        ))}
-      </ul>
+    <div
+      className={cn(
+        "group bg-card rounded-xl border p-6 transition-colors",
+        "hover:border-foreground/20",
+        className,
+      )}
+    >
+      {children}
     </div>
+  );
+}
+
+function CardHeader({
+  icon: Icon,
+  title,
+  meta,
+}: {
+  icon?: React.ComponentType<{ className?: string }>;
+  title: string;
+  meta?: React.ReactNode;
+}) {
+  return (
+    <div className="mb-4 flex items-start justify-between gap-3">
+      <div className="flex min-w-0 items-center gap-2">
+        {Icon && <Icon className="text-foreground/70 size-4 shrink-0" />}
+        <h3 className="text-foreground truncate text-base font-bold">
+          {title}
+        </h3>
+      </div>
+      {meta && <div className="shrink-0">{meta}</div>}
+    </div>
+  );
+}
+
+function SubSection({
+  title,
+  className,
+  children,
+}: {
+  title: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className={className}>
+      <h4 className="text-muted-foreground mb-2 text-[11px] font-semibold tracking-wider uppercase">
+        {title}
+      </h4>
+      {children}
+    </div>
+  );
+}
+
+type BulletTone = "default" | "emerald" | "amber" | "rose";
+
+function BulletList({
+  items,
+  tone = "default",
+}: {
+  items: string[];
+  tone?: BulletTone;
+}) {
+  const bulletColor =
+    tone === "emerald"
+      ? "before:text-emerald-600 dark:before:text-emerald-400"
+      : tone === "amber"
+        ? "before:text-amber-600 dark:before:text-amber-400"
+        : tone === "rose"
+          ? "before:text-rose-600 dark:before:text-rose-400"
+          : "before:text-foreground";
+
+  return (
+    <ul className="flex flex-col gap-2">
+      {items.map((item, i) => (
+        <li
+          key={i}
+          className={cn(
+            "text-muted-foreground relative ps-4 text-sm leading-relaxed",
+            "before:absolute before:start-0 before:font-bold before:content-['·']",
+            bulletColor,
+          )}
+        >
+          {item}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function Pill({
+  children,
+  highlight,
+}: {
+  children: React.ReactNode;
+  highlight?: boolean;
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs",
+        highlight
+          ? "bg-foreground/5 text-foreground border-transparent font-semibold"
+          : "text-muted-foreground border-border",
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+function SourceLink({ url }: { url: string }) {
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+      className="text-muted-foreground hover:text-foreground hover:border-foreground/30 focus-visible:ring-ring/50 focus-visible:border-ring group/link inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs transition-colors outline-none focus-visible:ring-[3px]"
+    >
+      <ExternalLink className="size-3" />
+      <span className="truncate max-w-[200px]">{hostFor(url)}</span>
+      <ArrowUpRight className="size-3 transition-transform group-hover/link:-translate-y-0.5 group-hover/link:translate-x-0.5" />
+    </a>
+  );
+}
+
+function VerdictPill({
+  verdict,
+  confidence,
+}: {
+  verdict: FitVerdict["verdict"];
+  confidence: number;
+}) {
+  const styles =
+    verdict === "fit"
+      ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+      : verdict === "borderline"
+        ? "bg-amber-500/10 text-amber-700 dark:text-amber-400"
+        : "bg-rose-500/10 text-rose-700 dark:text-rose-400";
+
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold capitalize",
+        styles,
+      )}
+    >
+      {verdict.replace("_", " ")}
+      <span className="text-foreground/50 ms-1 font-normal">
+        · {confidence}/10
+      </span>
+    </span>
   );
 }
 
