@@ -1,6 +1,8 @@
 import type { AnalyzeInput } from "@/lib/schemas";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+// Browser hits Next.js route handlers in `app/api/*`; those forward to the
+// real backend using the server-only `BACKEND_URL` env var. No CORS, no
+// backend URL leaked to the client bundle.
 
 // --- Response shape mirrors backend/app/schemas.py ---
 
@@ -93,7 +95,7 @@ async function asJson<T>(res: Response): Promise<T> {
 }
 
 export async function fetchAnalyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
-  const res = await fetch(`${BASE_URL}/v1/analyze`, {
+  const res = await fetch("/api/analyze", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(input),
@@ -104,7 +106,7 @@ export async function fetchAnalyze(input: AnalyzeInput): Promise<AnalyzeResponse
 export async function fetchExtractPdf(file: File): Promise<ExtractPdfResponse> {
   const form = new FormData();
   form.append("file", file);
-  const res = await fetch(`${BASE_URL}/v1/extract-pdf`, {
+  const res = await fetch("/api/extract-pdf", {
     method: "POST",
     body: form,
   });

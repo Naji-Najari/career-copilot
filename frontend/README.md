@@ -5,12 +5,29 @@ Next.js 15 + shadcn/ui single-page app. Left: analyze form (CV textarea or PDF u
 ## Run
 
 ```bash
-cp .env.local.example .env.local     # NEXT_PUBLIC_API_URL defaults to http://localhost:8080
+cp .env.local.example .env.local     # BACKEND_URL defaults to http://localhost:8080
 npm install
 npm run dev
 ```
 
 Open http://localhost:3000. The backend must be running (see `../backend/README.md`).
+
+## Architecture — BFF
+
+The browser **never** calls the Python backend directly. It calls same-origin
+Next.js route handlers that forward to the backend server-side:
+
+```
+browser ──► /api/analyze      ──► BACKEND_URL + /v1/analyze
+browser ──► /api/extract-pdf  ──► BACKEND_URL + /v1/extract-pdf
+```
+
+- `BACKEND_URL` is server-only (no `NEXT_PUBLIC_` prefix), so it never ships in the client bundle.
+- No CORS configuration needed on the backend — the browser's only origin is the Next.js app.
+- PDF uploads stream the raw multipart body upstream so large files don't get buffered twice.
+- All error status codes + bodies are preserved by the route handlers.
+
+Change the backend host by editing `BACKEND_URL` in `.env.local`.
 
 ## Stack
 
@@ -44,10 +61,12 @@ lib/
 └── api.ts            fetchAnalyze + fetchExtractPdf + TS types + type guards
 ```
 
-## API contract (mirrored from backend)
+## API contract
 
-- `POST /v1/analyze` — body `{cv_text, jd_text, mode}`; response is a discriminated union: `RecruiterFitResponse | RecruiterNoFitResponse | CandidateResponse`. See `lib/api.ts` for exact shapes and `isRecruiterFit` / `isRecruiterNoFit` / `isCandidate` guards.
-- `POST /v1/extract-pdf` — multipart `file`; response `{text: string}`. Used when the user picks "Upload PDF" for the CV.
+Same-origin routes exposed by the Next.js BFF (which forwards to the backend):
+
+- `POST /api/analyze` — body `{cv_text, jd_text, mode}`; response is a discriminated union: `RecruiterFitResponse | RecruiterNoFitResponse | CandidateResponse`. See `lib/api.ts` for exact shapes and `isRecruiterFit` / `isRecruiterNoFit` / `isCandidate` guards.
+- `POST /api/extract-pdf` — multipart `file`; response `{text: string}`. Used when the user picks "Upload PDF" for the CV or JD.
 
 ## Conventions (mirrored from `Clicklab-frontend`)
 
