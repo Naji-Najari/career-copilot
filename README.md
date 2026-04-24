@@ -35,23 +35,26 @@ Dual-mode AI tool built on Google ADK v2. Paste a CV and a Job Description, pick
 
 ## Modes
 
-```
-CV + JD + mode
-      |
-  Preprocessor  (parse CV + JD into typed schemas)
-      |
-  Mode Router
-     / \
-recruiter  candidate
-    |           |
-Fit Analyzer   Research Agent  (Tavily: web search + extract)
-    |               |
-Verdict         STAR Writer + Interview Prep  (parallel)
-   / \               \         /
-fit  no-fit           Join
-  |      |              |
-Outreach  Gap        Synthesizer
-Writer  Explainer
+```mermaid
+flowchart TD
+    A["CV + JD + mode"] --> B["Input Preprocessor\n(ParsedCV + ParsedJD)"]
+    B --> C{Mode Router}
+
+    C -->|recruiter| D[Fit Analyzer]
+    C -->|candidate| E["Research Agent\ntavily_search + tavily_extract"]
+
+    D --> F{Verdict Router}
+    F -->|fit| G["Outreach Writer\nGemini 2.5 Pro"]
+    F -->|no_fit| H[Gap Explainer]
+
+    E --> I[STAR Writer]
+    E --> J[Interview Prep]
+    I --> K[Join]
+    J --> K
+    K --> L[Synthesizer]
+
+    style G fill:#e8f4fd,stroke:#185FA5
+    style E fill:#e8f4fd,stroke:#185FA5
 ```
 
 The `is_likely_agency_posting` flag from the Research Agent is displayed as a banner in the UI — the feature that makes the demo screenshot worth sharing.
