@@ -1,7 +1,7 @@
 <h1 align="center">Career Copilot</h1>
 
 <p align="center">
-  <strong>Paste a CV and a Job Description. Pick a mode. Get a real output in seconds.</strong>
+  <strong>One CV. One JD. Outreach for recruiters. Interview prep for candidates.</strong>
 </p>
 
 <p align="center">
@@ -25,7 +25,7 @@
 
 ---
 
-Dual-mode AI tool built on Google ADK v2. Paste a CV and a Job Description, pick **Recruiter** or **Candidate** mode, and get a structured, grounded output — not generic AI filler.
+Recruiters get a fit verdict and an outreach draft citing a real achievement from the CV. Candidates get live company research (Tavily MCP) and a tailored interview prep bundle. Built on Google ADK v2 as a multi-agent graph.
 
 ## What it does
 
