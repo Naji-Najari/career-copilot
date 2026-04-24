@@ -1,15 +1,17 @@
+"""FastAPI entry point for the career-copilot backend."""
+
 from fastapi import FastAPI
 
-from app.routes.drafts import router as drafts_router
+from app.routes.analyze import router as analyze_router
+from app.utils.constants import VERSION
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-app = FastAPI(title="trend-writer", version="0.1.0")
-
-app.include_router(drafts_router)
+app = FastAPI(title="career-copilot", version=VERSION)
+app.include_router(analyze_router)
 
 
 @app.get("/health")
-async def health():
+async def health() -> dict[str, str]:
     return {"status": "healthy"}
