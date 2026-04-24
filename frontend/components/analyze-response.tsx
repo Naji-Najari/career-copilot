@@ -327,9 +327,7 @@ function InterviewPrepCard({ prep }: { prep: InterviewPrepBundle }) {
 // ---------------------------------------------------------------------------
 
 function ResponseGrid({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="grid items-start gap-4 md:grid-cols-2">{children}</div>
-  );
+  return <div className="flex flex-col gap-4">{children}</div>;
 }
 
 function Card({

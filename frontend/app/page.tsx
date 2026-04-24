@@ -14,6 +14,7 @@ export default function Home() {
   const [cvText, setCvText] = React.useState("");
   const [jdText, setJdText] = React.useState("");
   const [errors, setErrors] = React.useState<Record<string, string>>({});
+  const resultRef = React.useRef<HTMLDivElement>(null);
 
   const mutation = useMutation({
     mutationFn: fetchAnalyze,
@@ -21,6 +22,12 @@ export default function Home() {
       toast.error(err.message || "Agent run failed.");
     },
   });
+
+  // Once a run starts or finishes, scroll the result section into view.
+  React.useEffect(() => {
+    if (mutation.isIdle) return;
+    resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [mutation.isIdle, mutation.isPending, mutation.isSuccess, mutation.isError]);
 
   function handleSubmit() {
     const input = { cv_text: cvText, jd_text: jdText, mode };
@@ -38,9 +45,8 @@ export default function Home() {
     mutation.mutate(parsed.data);
   }
 
-  // Initial render: full-page hero form.
-  if (mutation.isIdle) {
-    return (
+  return (
+    <>
       <AnalyzeForm
         mode={mode}
         onModeChange={setMode}
@@ -50,33 +56,16 @@ export default function Home() {
         onJdChange={setJdText}
         errors={errors}
         onSubmit={handleSubmit}
-        pending={false}
+        pending={mutation.isPending}
       />
-    );
-  }
-
-  // Post-submit: form compact on the left, response on the right.
-  return (
-    <div className="bg-background md:flex md:min-h-dvh">
-      <aside className="bg-card border-b md:sticky md:top-0 md:h-dvh md:w-[420px] md:shrink-0 md:overflow-y-auto md:border-r md:border-b-0">
-        <AnalyzeForm
-          variant="compact"
-          mode={mode}
-          onModeChange={setMode}
-          cvText={cvText}
-          onCvChange={setCvText}
-          jdText={jdText}
-          onJdChange={setJdText}
-          errors={errors}
-          onSubmit={handleSubmit}
-          pending={mutation.isPending}
-        />
-      </aside>
-      <main className="flex-1 md:overflow-y-auto">
-        <div className="mx-auto max-w-5xl px-4 py-8 md:px-8 md:py-12">
+      {!mutation.isIdle && (
+        <section
+          ref={resultRef}
+          className="border-border/60 mx-auto w-full max-w-5xl border-t px-4 py-12 md:px-8 md:py-16"
+        >
           <AnalyzeResponseView mutation={mutation} />
-        </div>
-      </main>
-    </div>
+        </section>
+      )}
+    </>
   );
 }

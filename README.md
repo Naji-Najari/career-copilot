@@ -1,4 +1,4 @@
-<h1 align="center">career-copilot</h1>
+<h1 align="center">Career Copilot</h1>
 
 <p align="center">
   <strong>Paste a CV and a Job Description. Pick a mode. Get a real output in seconds.</strong>
@@ -97,21 +97,6 @@ Google ADK v2 graph-based `Workflow(edges=[...])`. Every LLM node has a typed Py
 | Research | Tavily via MCP (`McpToolset` + remote HTTP endpoint)            |
 | Frontend | TBD — Next.js app coming next                                   |
 | Deploy   | Dockerfile for Cloud Run / HuggingFace Spaces                   |
-
-## Status
-
-Active development, built incrementally.
-
-- [x] Project structure + FastAPI backend boots
-- [x] Pydantic schemas (ParsedCV, ParsedJD, FitVerdict, OutreachDraft, GapReport, CompanyIntelligence, InterviewPrepBundle, PrepBundle)
-- [x] CV + JD parsers running in parallel with `JoinNode`
-- [x] Recruiter branch (Fit Analyzer → Verdict Router → Outreach / Gap)
-- [x] Tavily MCP integration
-- [x] Candidate branch (Research Agent → Interview Prep)
-- [x] `POST /v1/analyze` with discriminated response
-- [x] Unit tests for routers
-- [ ] Next.js frontend
-- [ ] HuggingFace Spaces / Cloud Run deploy
 
 ## Setup
 
