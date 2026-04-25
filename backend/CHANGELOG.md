@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.4](https://github.com/Naji-Najari/career-copilot/compare/v0.2.3...v0.2.4) (2026-04-25)
+
+
+### Bug Fixes
+
+* add missing period to raw_text field description in CV parsing rules ([94eb12e](https://github.com/Naji-Najari/career-copilot/commit/94eb12ea1e25aec954cec098049c2f5d30481eef))
+
 ## [0.2.3](https://github.com/Naji-Najari/career-copilot/compare/v0.2.2...v0.2.3) (2026-04-25)
 
 
