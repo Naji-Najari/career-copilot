@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/Naji-Najari/career-copilot/compare/v0.2.1...v0.2.2) (2026-04-25)
+
+
+### Bug Fixes
+
+* update Docker image paths in release configuration and correct log message punctuation in analyze function ([8b02b7e](https://github.com/Naji-Najari/career-copilot/commit/8b02b7e45f855e4f49ea0e828a0990e268749d37))
+
 ## [0.2.1](https://github.com/Naji-Najari/career-copilot/compare/v0.2.0...v0.2.1) (2026-04-25)
 
 
