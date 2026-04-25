@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.3](https://github.com/Naji-Najari/career-copilot/compare/v0.2.2...v0.2.3) (2026-04-25)
+
+
+### Bug Fixes
+
+* correct formatting of raw_text field description in CV parsing rules ([0333242](https://github.com/Naji-Najari/career-copilot/commit/033324256d0675744106a047206e1d7722405c3f))
+
 ## [0.2.2](https://github.com/Naji-Najari/career-copilot/compare/v0.2.1...v0.2.2) (2026-04-25)
 
 
