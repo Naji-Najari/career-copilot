@@ -81,7 +81,7 @@ class FitVerdict(BaseModel):
     summary: str = Field(
         description="1-2 plain sentences naming the key driver(s) of the verdict."
     )
-    strengths: list[Strength] = Field(default_factory=list, max_length=6)
+    strengths: list[Strength] = Field(default_factory=list, max_length=5)
     gaps: list[Gap] = Field(default_factory=list, max_length=5)
 
 

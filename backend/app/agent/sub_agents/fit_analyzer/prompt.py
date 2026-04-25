@@ -24,7 +24,7 @@ Job description (parsed):
 ## Content guidance
 - confidence: calibrated. Use >= 8 only when evidence is overwhelming.
 - summary: lead with the most important factor. 1-2 sentences, plain-spoken.
-- strengths (3-6 items): each cites ONE concrete CV signal.
+- strengths (1-5 items): each cites ONE concrete CV signal.
     - claim — short, near-verbatim CV bullet (one line).
     - rationale — how this satisfies a specific JD requirement (1-2 sentences).
 - gaps (0-5 items): each identifies ONE missing requirement.

@@ -85,3 +85,30 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
+
+/* Pulse traveling along a horizontal beam (used by ThinkingFlow). */
+@keyframes career-beam-forward {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(220%);
+  }
+}
+@keyframes career-beam-reverse {
+  0% {
+    transform: translateX(220%);
+  }
+  100% {
+    transform: translateX(-110%);
+  }
+}
+/* Gradient sliding under masked text (used for the rotating status). */
+@keyframes career-shimmer {
+  0% {
+    background-position: 200% center;
+  }
+  100% {
+    background-position: -200% center;
+  }
+}

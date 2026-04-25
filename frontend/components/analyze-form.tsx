@@ -153,6 +153,7 @@ const STACK: Array<{ label: string; value: string; color: string }> = [
   { label: "Google ADK", value: "v2", color: "#4285F4" },
   { label: "Cloud", value: "GCP", color: "#1A73E8" },
   { label: "Tavily", value: "MCP", color: "#0B7285" },
+  { label: "Langfuse", value: "tracing", color: "#0F172A" },
   { label: "uv", value: "managed", color: "#DE5FE9" },
   { label: "Next.js", value: "15", color: "#000000" },
 ];

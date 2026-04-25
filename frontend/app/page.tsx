@@ -61,7 +61,7 @@ export default function Home() {
       {!mutation.isIdle && (
         <section
           ref={resultRef}
-          className="border-border/60 mx-auto w-full max-w-5xl border-t px-4 py-12 md:px-8 md:py-16"
+          className="mx-auto w-full max-w-5xl px-4 pb-12 md:px-8"
         >
           <AnalyzeResponseView mutation={mutation} />
         </section>

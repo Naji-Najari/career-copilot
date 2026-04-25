@@ -10,6 +10,7 @@
   <img src="https://img.shields.io/badge/Google_ADK-v2-4285F4?logo=google&logoColor=white" alt="Google ADK v2" />
   <img src="https://img.shields.io/badge/OpenAI-gpt--5.4--mini-412991?logo=openai&logoColor=white" alt="OpenAI gpt-5.4-mini" />
   <img src="https://img.shields.io/badge/Tavily-MCP-0B7285" alt="Tavily MCP" />
+  <img src="https://img.shields.io/badge/Langfuse-tracing-0F172A" alt="Langfuse tracing" />
   <img src="https://img.shields.io/badge/uv-managed-DE5FE9?logo=astral&logoColor=white" alt="uv" />
   <img src="https://img.shields.io/badge/License-MIT-yellow" alt="License MIT" />
 </p>

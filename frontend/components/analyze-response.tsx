@@ -6,8 +6,10 @@ import {
   AlertTriangle,
   ArrowUpRight,
   BadgeCheck,
+  Briefcase,
   Building2,
   ExternalLink,
+  FileText,
   Lightbulb,
   MailCheck,
   MinusCircle,
@@ -66,6 +68,7 @@ function IdleState() {
 function LoadingState() {
   return (
     <ResponseGrid>
+      <ThinkingFlow />
       <VerdictBannerSkeleton />
       <SpreadSectionSkeleton />
       <SpreadSectionSkeleton />
@@ -84,6 +87,102 @@ function LoadingState() {
         </div>
       </Card>
     </ResponseGrid>
+  );
+}
+
+// "Agent is thinking" affordance. CV and JD nodes feed a center Copilot node
+// via two CSS-animated beams (a small pulse sweeps along each line). Below,
+// a status caption shimmers and rotates through the pipeline steps so the
+// user sees the agent narrating itself rather than staring at a blank skeleton.
+function ThinkingFlow() {
+  const messages = React.useMemo(
+    () => [
+      "Parsing the CV…",
+      "Reading the job description…",
+      "Routing to the right branch…",
+      "Analyzing the fit…",
+      "Drafting the response…",
+    ],
+    [],
+  );
+  const [idx, setIdx] = React.useState(0);
+
+  React.useEffect(() => {
+    const t = setInterval(
+      () => setIdx((i) => (i + 1) % messages.length),
+      1800,
+    );
+    return () => clearInterval(t);
+  }, [messages.length]);
+
+  return (
+    <div className="flex flex-col items-center gap-4 py-8">
+      <div className="flex w-full max-w-md items-center gap-3">
+        <FlowNode icon={FileText} label="CV" />
+        <FlowBeam />
+        <FlowNode icon={Sparkles} label="Copilot" highlight />
+        <FlowBeam reverse />
+        <FlowNode icon={Briefcase} label="JD" />
+      </div>
+      <div className="flex items-center gap-2 text-sm">
+        <span className="text-muted-foreground">Career Copilot is</span>
+        <span
+          key={idx}
+          className="animate-in fade-in bg-[linear-gradient(90deg,var(--muted-foreground)_0%,var(--foreground)_50%,var(--muted-foreground)_100%)] bg-[length:200%_100%] bg-clip-text font-medium text-transparent duration-500 [animation:career-shimmer_2.5s_linear_infinite]"
+        >
+          {messages[idx]}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function FlowNode({
+  icon: Icon,
+  label,
+  highlight,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  highlight?: boolean;
+}) {
+  return (
+    <div className="flex shrink-0 flex-col items-center gap-1.5">
+      <div
+        className={cn(
+          "bg-card flex size-12 items-center justify-center rounded-full border",
+          highlight &&
+            "border-emerald-500/40 ring-2 ring-emerald-500/20 ring-offset-2 ring-offset-background",
+        )}
+      >
+        <Icon
+          className={cn(
+            "size-5",
+            highlight
+              ? "text-emerald-600 dark:text-emerald-400"
+              : "text-foreground/70",
+          )}
+        />
+      </div>
+      <span className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function FlowBeam({ reverse }: { reverse?: boolean }) {
+  return (
+    <div className="bg-foreground/10 relative h-px flex-1 overflow-hidden">
+      <div
+        className={cn(
+          "absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-emerald-500 to-transparent",
+          reverse
+            ? "[animation:career-beam-reverse_2.2s_linear_infinite]"
+            : "[animation:career-beam-forward_2.2s_linear_infinite]",
+        )}
+      />
+    </div>
   );
 }
 

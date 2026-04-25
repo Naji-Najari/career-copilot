@@ -10,8 +10,12 @@ from app.routes.extract import router as extract_router
 from app.utils.constants import ENV, VERSION
 from app.utils.logger import get_logger
 from app.utils.logging_middleware import log_request
+from app.utils.observability import setup_observability
 
 logger = get_logger(__name__)
+
+# Patch ADK with OTel exporters before any agent is constructed.
+setup_observability()
 
 
 @asynccontextmanager
