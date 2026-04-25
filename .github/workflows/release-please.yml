@@ -43,16 +43,16 @@ jobs:
       - name: Build and push Docker image
         working-directory: backend
         run: |
-          docker build -t europe-west1-docker.pkg.dev/true-bit-428513-k4/career-copilot/career-copilot:${{ needs.release-please.outputs.tag_name }} .
-          docker tag europe-west1-docker.pkg.dev/true-bit-428513-k4/career-copilot/career-copilot:${{ needs.release-please.outputs.tag_name }} \
-                     europe-west1-docker.pkg.dev/true-bit-428513-k4/career-copilot/career-copilot:latest
-          docker push europe-west1-docker.pkg.dev/true-bit-428513-k4/career-copilot/career-copilot:${{ needs.release-please.outputs.tag_name }}
-          docker push europe-west1-docker.pkg.dev/true-bit-428513-k4/career-copilot/career-copilot:latest
+          docker build -t europe-west1-docker.pkg.dev/career-copilot-494408/career-copilot/career-copilot:${{ needs.release-please.outputs.tag_name }} .
+          docker tag europe-west1-docker.pkg.dev/career-copilot-494408/career-copilot/career-copilot:${{ needs.release-please.outputs.tag_name }} \
+                     europe-west1-docker.pkg.dev/career-copilot-494408/career-copilot/career-copilot:latest
+          docker push europe-west1-docker.pkg.dev/career-copilot-494408/career-copilot/career-copilot:${{ needs.release-please.outputs.tag_name }}
+          docker push europe-west1-docker.pkg.dev/career-copilot-494408/career-copilot/career-copilot:latest
 
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy career-copilot \
-            --image europe-west1-docker.pkg.dev/true-bit-428513-k4/career-copilot/career-copilot:${{ needs.release-please.outputs.tag_name }} \
+            --image europe-west1-docker.pkg.dev/career-copilot-494408/career-copilot/career-copilot:${{ needs.release-please.outputs.tag_name }} \
             --platform managed \
             --region europe-west1 \
             --allow-unauthenticated \

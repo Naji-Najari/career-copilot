@@ -37,7 +37,7 @@ PRIMARY_MODEL = "openai/gpt-5.4-mini"
 async def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
     """Run the dual-mode career-copilot workflow against a CV + JD."""
     logger.info(
-        "analyze start: mode=%s cv_chars=%d jd_chars=%d",
+        "analyze start: mode=%s cv_chars=%d jd_chars=%d.",
         request.mode,
         len(request.cv_text),
         len(request.jd_text),
