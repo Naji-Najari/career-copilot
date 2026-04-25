@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import type { UseMutationResult } from "@tanstack/react-query";
 import {
   AlertTriangle,
@@ -9,6 +10,7 @@ import {
   ExternalLink,
   Lightbulb,
   MailCheck,
+  MinusCircle,
   Sparkles,
   TriangleAlert,
 } from "lucide-react";
@@ -64,27 +66,95 @@ function IdleState() {
 function LoadingState() {
   return (
     <ResponseGrid>
+      <VerdictBannerSkeleton />
+      <SpreadSectionSkeleton />
+      <SpreadSectionSkeleton />
       <Card>
-        <CardHeader icon={Sparkles} title="Running the agent" />
-        <p className="text-muted-foreground mb-4 text-sm leading-relaxed">
-          This can take up to ~15 seconds in candidate mode (Tavily research).
-        </p>
-        <div className="flex flex-col gap-3">
-          <Skeleton className="h-3 w-3/4" />
-          <Skeleton className="h-3 w-2/3" />
-          <Skeleton className="h-3 w-5/6" />
+        <div className="mb-4 flex items-center gap-2">
+          <Sparkles className="text-foreground/40 size-4 shrink-0" />
+          <Skeleton className="h-4 w-40" />
         </div>
-      </Card>
-      <Card>
-        <CardHeader icon={Sparkles} title="Preparing output" />
-        <div className="flex flex-col gap-3">
-          <Skeleton className="h-3 w-1/2" />
+        <div className="flex flex-col gap-2.5">
           <Skeleton className="h-3 w-full" />
-          <Skeleton className="h-3 w-4/5" />
-          <Skeleton className="h-3 w-3/5" />
+          <Skeleton className="h-3 w-[94%]" />
+          <Skeleton className="h-3 w-[88%]" />
+          <Skeleton className="h-3 w-[72%]" />
+          <Skeleton className="h-3 w-[80%]" />
+          <Skeleton className="h-3 w-[64%]" />
         </div>
       </Card>
     </ResponseGrid>
+  );
+}
+
+function VerdictBannerSkeleton() {
+  return (
+    <div className="bg-card flex flex-col gap-5 rounded-xl border p-6 md:flex-row md:items-start">
+      <div className="flex shrink-0 flex-col items-start gap-2 md:w-48">
+        <Skeleton className="h-3 w-20" />
+        <Skeleton className="h-9 w-32" />
+        <Skeleton className="h-5 w-28 rounded-md" />
+      </div>
+      <div className="border-border flex-1 md:border-l md:pl-5">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-3 w-[92%]" />
+          <Skeleton className="h-3 w-[64%]" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SpreadSectionSkeleton() {
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-2 px-1">
+        <Skeleton className="size-4 rounded-full" />
+        <Skeleton className="h-3 w-20" />
+        <Skeleton className="h-4 w-16 rounded-md" />
+      </div>
+      <div className="bg-card rounded-xl border p-6 sm:p-8">
+        <div className="flex flex-col gap-3 sm:hidden">
+          <SpreadCardSkeleton />
+          <SpreadCardSkeleton />
+        </div>
+        <div className="mx-auto hidden w-fit items-end justify-center sm:flex">
+          {[0, 1, 2].map((i) => {
+            const offset = i - 1;
+            const angle = offset * 5;
+            const yShift = Math.abs(offset) * 6;
+            const zBase = 10 - Math.abs(offset);
+            return (
+              <div
+                key={i}
+                style={{
+                  transform: `translateY(${yShift}px) rotate(${angle}deg)`,
+                  marginLeft: i === 0 ? 0 : "-2.25rem",
+                  zIndex: zBase,
+                }}
+                className="origin-bottom"
+              >
+                <SpreadCardSkeleton />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SpreadCardSkeleton() {
+  return (
+    <div className="bg-card flex h-44 w-52 flex-col rounded-xl border p-4 shadow-md">
+      <Skeleton className="mb-3 h-4 w-20 rounded-md" />
+      <Skeleton className="mb-1.5 h-3 w-[88%]" />
+      <Skeleton className="mb-3 h-3 w-[60%]" />
+      <Skeleton className="mb-1.5 h-2.5 w-full" />
+      <Skeleton className="mb-1.5 h-2.5 w-[92%]" />
+      <Skeleton className="h-2.5 w-[70%]" />
+    </div>
   );
 }
 
@@ -118,7 +188,7 @@ function SuccessState({ data }: { data: AnalyzeResponse }) {
 function RecruiterFitView({ data }: { data: RecruiterFitResponse }) {
   return (
     <ResponseGrid>
-      <VerdictCard verdict={data.verdict} />
+      <FitTriptych verdict={data.verdict} />
       <OutreachCard outreach={data.outreach} />
     </ResponseGrid>
   );
@@ -127,7 +197,7 @@ function RecruiterFitView({ data }: { data: RecruiterFitResponse }) {
 function RecruiterNoFitView({ data }: { data: RecruiterNoFitResponse }) {
   return (
     <ResponseGrid>
-      <VerdictCard verdict={data.verdict} />
+      <FitTriptych verdict={data.verdict} />
       <GapCard gap={data.gap} />
     </ResponseGrid>
   );
@@ -146,8 +216,33 @@ function CandidateView({ data }: { data: CandidateResponse }) {
 // Cards
 // ---------------------------------------------------------------------------
 
-function VerdictCard({ verdict }: { verdict: FitVerdict }) {
-  const tone =
+// Verdict banner + two Animata-style "card spread" sections. Each spread
+// sits as a stack at rest, fans out on hover, and lays into a row on click.
+// (See https://animata.design/docs/card/card-spread for the underlying
+// pattern — adapted here for strengths/gaps mini-cards.)
+
+type Tone = "emerald" | "amber" | "rose";
+
+const TONE_TEXT: Record<Tone, string> = {
+  emerald: "text-emerald-600 dark:text-emerald-400",
+  amber: "text-amber-600 dark:text-amber-400",
+  rose: "text-rose-600 dark:text-rose-400",
+};
+
+const TONE_BG: Record<Tone, string> = {
+  emerald: "bg-emerald-500/10",
+  amber: "bg-amber-500/10",
+  rose: "bg-rose-500/10",
+};
+
+const TONE_BORDER: Record<Tone, string> = {
+  emerald: "border-emerald-500/40",
+  amber: "border-amber-500/40",
+  rose: "border-rose-500/40",
+};
+
+function FitTriptych({ verdict }: { verdict: FitVerdict }) {
+  const verdictTone: Tone =
     verdict.verdict === "fit"
       ? "emerald"
       : verdict.verdict === "borderline"
@@ -155,28 +250,215 @@ function VerdictCard({ verdict }: { verdict: FitVerdict }) {
         : "rose";
 
   return (
-    <Card>
-      <CardHeader
+    <div className="flex flex-col gap-4">
+      <VerdictBanner verdict={verdict} tone={verdictTone} />
+      <SpreadSection
         icon={BadgeCheck}
-        title="Fit verdict"
-        meta={
-          <VerdictPill verdict={verdict.verdict} confidence={verdict.confidence} />
-        }
+        label="Strengths"
+        tone="emerald"
+        singularLabel="Strength"
+        emptyText="No strengths surfaced."
+        items={verdict.strengths.map((s) => ({
+          headline: s.claim,
+          body: s.rationale,
+        }))}
       />
-      <p className="text-muted-foreground mb-4 text-sm leading-relaxed">
-        {verdict.notes}
+      <SpreadSection
+        icon={MinusCircle}
+        label="Gaps"
+        tone="rose"
+        singularLabel="Gap"
+        emptyText="No gaps identified."
+        items={verdict.gaps.map((g) => ({
+          headline: g.missing,
+          body: g.impact,
+        }))}
+      />
+    </div>
+  );
+}
+
+function VerdictBanner({
+  verdict,
+  tone,
+}: {
+  verdict: FitVerdict;
+  tone: Tone;
+}) {
+  return (
+    <div
+      className={cn(
+        "bg-card flex flex-col gap-5 rounded-xl border p-6 transition-colors hover:border-foreground/20 md:flex-row md:items-start",
+        TONE_BORDER[tone],
+      )}
+    >
+      <div className="flex shrink-0 flex-col items-start gap-2 md:w-48">
+        <span className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
+          Fit verdict
+        </span>
+        <span
+          className={cn(
+            "text-3xl font-bold tracking-tight capitalize md:text-4xl",
+            TONE_TEXT[tone],
+          )}
+        >
+          {verdict.verdict.replace("_", " ")}
+        </span>
+        <span
+          className={cn(
+            "inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold",
+            TONE_BG[tone],
+            TONE_TEXT[tone],
+          )}
+        >
+          confidence {verdict.confidence}/10
+        </span>
+      </div>
+      <div className="border-border flex-1 md:border-l md:pl-5">
+        <p className="text-foreground/90 text-sm leading-relaxed">
+          {verdict.summary}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+type SpreadItem = { headline: string; body: string };
+
+// Cards splay out symmetrically from the center: small alternating tilt,
+// further-from-center cards sit slightly lower and overlap their neighbours.
+// Pattern adapted from animata.design/docs/hero/product-features (without
+// motion/react — pure CSS transforms + tw-animate-css for the entrance).
+function SpreadSection({
+  icon: Icon,
+  label,
+  tone,
+  singularLabel,
+  emptyText,
+  items,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  tone: Tone;
+  singularLabel: string;
+  emptyText: string;
+  items: SpreadItem[];
+}) {
+  const count = items.length;
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-2 px-1">
+        <Icon className={cn("size-4", TONE_TEXT[tone])} />
+        <span className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
+          {label}
+        </span>
+        {count > 0 && (
+          <span
+            className={cn(
+              "inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wider",
+              TONE_BG[tone],
+              TONE_TEXT[tone],
+            )}
+          >
+            {count} {count === 1 ? "point" : "points"}
+          </span>
+        )}
+      </div>
+      {count === 0 ? (
+        <div className="bg-card rounded-xl border p-5">
+          <p className="text-muted-foreground text-sm">{emptyText}</p>
+        </div>
+      ) : (
+        <div className="bg-card rounded-xl border p-6 transition-colors hover:border-foreground/20 sm:p-8">
+          {/* Mobile: simple stack */}
+          <div className="flex flex-col gap-3 sm:hidden">
+            {items.map((item, i) => (
+              <SpreadCard
+                key={i}
+                headline={item.headline}
+                body={item.body}
+                tone={tone}
+                label={`${singularLabel} ${i + 1}`}
+              />
+            ))}
+          </div>
+          {/* Desktop: fanned overlap */}
+          <div className="mx-auto hidden w-fit items-end justify-center sm:flex">
+            {items.map((item, i) => {
+              const offset = i - (count - 1) / 2;
+              const angle = offset * 5;
+              const yShift = Math.abs(offset) * 6;
+              const zBase = 10 - Math.round(Math.abs(offset));
+              return (
+                <div
+                  key={i}
+                  style={
+                    {
+                      "--rest-rot": `${angle}deg`,
+                      "--rest-y": `${yShift}px`,
+                      "--rest-z": zBase,
+                      "--rest-ml": i === 0 ? "0px" : "-2.25rem",
+                      animationDelay: `${i * 80}ms`,
+                    } as React.CSSProperties
+                  }
+                  className={cn(
+                    "animate-in fade-in slide-in-from-bottom-4 origin-bottom transition-all duration-300 ease-out",
+                    "z-[var(--rest-z)] [margin-left:var(--rest-ml)]",
+                    "[transform:translateY(var(--rest-y))_rotate(var(--rest-rot))]",
+                    "hover:z-20 hover:[transform:translateY(-10px)_rotate(0deg)_scale(1.08)]",
+                  )}
+                >
+                  <SpreadCard
+                    headline={item.headline}
+                    body={item.body}
+                    tone={tone}
+                    label={`${singularLabel} ${i + 1}`}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SpreadCard({
+  headline,
+  body,
+  tone,
+  label,
+}: {
+  headline: string;
+  body: string;
+  tone: Tone;
+  label: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "bg-card flex h-44 w-52 flex-col rounded-xl border p-4 shadow-md",
+        TONE_BORDER[tone],
+      )}
+    >
+      <div
+        className={cn(
+          "mb-2 inline-flex w-max items-center rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wider uppercase",
+          TONE_BG[tone],
+          TONE_TEXT[tone],
+        )}
+      >
+        {label}
+      </div>
+      <p className="text-foreground mb-1.5 line-clamp-3 text-xs leading-snug font-semibold">
+        {headline}
       </p>
-      {verdict.matched_evidence.length > 0 && (
-        <SubSection title="Matched evidence" className="mb-4">
-          <BulletList items={verdict.matched_evidence} tone={tone} />
-        </SubSection>
-      )}
-      {verdict.gaps.length > 0 && (
-        <SubSection title="Gaps">
-          <BulletList items={verdict.gaps} />
-        </SubSection>
-      )}
-    </Card>
+      <p className="text-muted-foreground min-h-0 flex-1 overflow-y-auto text-[11px] leading-relaxed">
+        {body}
+      </p>
+    </div>
   );
 }
 
@@ -460,35 +742,6 @@ function SourceLink({ url }: { url: string }) {
       <span className="truncate max-w-[200px]">{hostFor(url)}</span>
       <ArrowUpRight className="size-3 transition-transform group-hover/link:-translate-y-0.5 group-hover/link:translate-x-0.5" />
     </a>
-  );
-}
-
-function VerdictPill({
-  verdict,
-  confidence,
-}: {
-  verdict: FitVerdict["verdict"];
-  confidence: number;
-}) {
-  const styles =
-    verdict === "fit"
-      ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-      : verdict === "borderline"
-        ? "bg-amber-500/10 text-amber-700 dark:text-amber-400"
-        : "bg-rose-500/10 text-rose-700 dark:text-rose-400";
-
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold capitalize",
-        styles,
-      )}
-    >
-      {verdict.replace("_", " ")}
-      <span className="text-foreground/50 ms-1 font-normal">
-        · {confidence}/10
-      </span>
-    </span>
   );
 }
 

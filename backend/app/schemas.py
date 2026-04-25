@@ -55,14 +55,34 @@ Mode = Literal["recruiter", "candidate"]
 Verdict = Literal["fit", "borderline", "no_fit"]
 
 
+class Strength(BaseModel):
+    """A single matched strength: one concrete CV signal + why it satisfies the JD."""
+
+    claim: str = Field(description="Near-verbatim CV signal, one line.")
+    rationale: str = Field(
+        description="How this satisfies a specific JD requirement — 1-2 sentences."
+    )
+
+
+class Gap(BaseModel):
+    """A single gap: what's missing + which JD requirement it puts at risk."""
+
+    missing: str = Field(description="Short headline of what is missing, one line.")
+    impact: str = Field(
+        description="Which JD requirement is at risk, and how severely — 1-2 sentences."
+    )
+
+
 class FitVerdict(BaseModel):
     """Output of the Fit Analyzer."""
 
     verdict: Verdict
-    confidence: int = Field(ge=1, le=10)
-    matched_evidence: list[str] = Field(default_factory=list)
-    gaps: list[str] = Field(default_factory=list)
-    notes: str
+    confidence: int = Field(ge=1, le=10, description="Calibrated 1-10.")
+    summary: str = Field(
+        description="1-2 plain sentences naming the key driver(s) of the verdict."
+    )
+    strengths: list[Strength] = Field(default_factory=list, max_length=6)
+    gaps: list[Gap] = Field(default_factory=list, max_length=5)
 
 
 class OutreachDraft(BaseModel):

@@ -6,12 +6,15 @@ import type { AnalyzeInput } from "@/lib/schemas";
 
 // --- Response shape mirrors backend/app/schemas.py ---
 
+export type Strength = { claim: string; rationale: string };
+export type Gap = { missing: string; impact: string };
+
 export type FitVerdict = {
   verdict: "fit" | "borderline" | "no_fit";
   confidence: number;
-  matched_evidence: string[];
-  gaps: string[];
-  notes: string;
+  summary: string;
+  strengths: Strength[];
+  gaps: Gap[];
 };
 
 export type OutreachDraft = {

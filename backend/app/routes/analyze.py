@@ -30,6 +30,12 @@ AnalyzeResponse = Union[RecruiterFitResponse, RecruiterNoFitResponse, CandidateR
 @router.post("/analyze", response_model=AnalyzeResponse)
 async def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
     """Run the dual-mode career-copilot workflow against a CV + JD."""
+    logger.info(
+        "analyze start: mode=%s cv_chars=%d jd_chars=%d",
+        request.mode,
+        len(request.cv_text),
+        len(request.jd_text),
+    )
     initial_state = {
         "cv_text": request.cv_text,
         "jd_text": request.jd_text,
@@ -45,6 +51,11 @@ async def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
             detail=f"agent run failed: {exc}",
         ) from exc
 
+    logger.info(
+        "analyze done: mode=%s state_keys=%s",
+        request.mode,
+        sorted(state.keys()),
+    )
     if request.mode == "recruiter":
         return _build_recruiter_response(state)
     return _build_candidate_response(state)
