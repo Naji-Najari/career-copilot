@@ -22,7 +22,7 @@ setup_observability()
 async def lifespan(app: FastAPI):
     logger.info("career-copilot starting — env=%s version=%s", ENV, VERSION)
     yield
-    logger.info("career-copilot shutting down")
+    logger.info("career-copilot shutting down.")
 
 
 app = FastAPI(title="career-copilot", version=VERSION, lifespan=lifespan)
