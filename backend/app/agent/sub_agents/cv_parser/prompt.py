@@ -9,6 +9,7 @@ CV_TEXT:
 Return JSON matching the required schema.
 
 Field guidance:
+- `candidate_name`: the candidate's full name as written on the CV (typically near the top). Null if absent or ambiguous. Do not invent.
 - `skills`: technical skills, tools, frameworks, programming languages. Deduplicate, keep canonical casing (e.g. "PostgreSQL" not "postgres"). Do not include soft skills.
 - `years_experience`: integer. Estimate conservatively from the candidate's continuous professional experience. If only month/year ranges are given, round down. If unclear, pick the lower bound; if truly absent, set 0.
 - `key_achievements`: one-line accomplishments with measurable impact when stated ("led migration of X reducing Y by Z%"). Responsibilities and job duties do NOT count. Verbatim-ish (you may shorten but do not invent). Max 8 items.

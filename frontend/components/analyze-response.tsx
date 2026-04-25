@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import type { UseMutationResult } from "@tanstack/react-query";
+import ReactMarkdown from "react-markdown";
 import {
   AlertTriangle,
   ArrowUpRight,
@@ -565,9 +566,23 @@ function OutreachCard({ outreach }: { outreach: OutreachDraft }) {
   return (
     <Card>
       <CardHeader icon={MailCheck} title={outreach.subject_line} />
-      <pre className="text-foreground/90 mb-4 text-sm leading-relaxed whitespace-pre-wrap font-sans">
-        {outreach.body}
-      </pre>
+      <div className="text-foreground/90 mb-4 text-sm leading-relaxed">
+        <ReactMarkdown
+          components={{
+            p: ({ children }) => (
+              <p className="mb-3 last:mb-0">{children}</p>
+            ),
+            strong: ({ children }) => (
+              <strong className="text-foreground font-semibold">
+                {children}
+              </strong>
+            ),
+            em: ({ children }) => <em className="italic">{children}</em>,
+          }}
+        >
+          {outreach.body}
+        </ReactMarkdown>
+      </div>
       <div className="border-border border-t pt-3">
         <p className="text-muted-foreground text-xs leading-relaxed">
           <span className="text-foreground/80 font-semibold">

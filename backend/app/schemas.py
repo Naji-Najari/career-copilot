@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field
 class ParsedCV(BaseModel):
     """Structured projection of the raw CV text."""
 
+    candidate_name: str | None = None
     skills: list[str] = Field(default_factory=list)
     years_experience: int = Field(ge=0)
     key_achievements: list[str] = Field(default_factory=list)
