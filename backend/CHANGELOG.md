@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/Naji-Najari/career-copilot/compare/v0.2.0...v0.2.1) (2026-04-25)
+
+
+### Bug Fixes
+
+* correct shutdown log message punctuation in lifespan function ([e04787c](https://github.com/Naji-Najari/career-copilot/commit/e04787c1c0c465046301bbacbc807a5878d35f01))
+
 ## [0.2.0](https://github.com/Naji-Najari/career-copilot/compare/v0.1.0...v0.2.0) (2026-04-25)
 
 
