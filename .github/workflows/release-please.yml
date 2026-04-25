@@ -1,0 +1,70 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs['backend--release_created'] }}
+      tag_name: ${{ steps.release.outputs['backend--tag_name'] }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.RELEASE_GITHUB_TOKEN }}
+
+  deploy:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker europe-west1-docker.pkg.dev
+
+      - name: Build and push Docker image
+        working-directory: backend
+        run: |
+          docker build -t europe-west1-docker.pkg.dev/true-bit-428513-k4/career-copilot/career-copilot:${{ needs.release-please.outputs.tag_name }} .
+          docker tag europe-west1-docker.pkg.dev/true-bit-428513-k4/career-copilot/career-copilot:${{ needs.release-please.outputs.tag_name }} \
+                     europe-west1-docker.pkg.dev/true-bit-428513-k4/career-copilot/career-copilot:latest
+          docker push europe-west1-docker.pkg.dev/true-bit-428513-k4/career-copilot/career-copilot:${{ needs.release-please.outputs.tag_name }}
+          docker push europe-west1-docker.pkg.dev/true-bit-428513-k4/career-copilot/career-copilot:latest
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy career-copilot \
+            --image europe-west1-docker.pkg.dev/true-bit-428513-k4/career-copilot/career-copilot:${{ needs.release-please.outputs.tag_name }} \
+            --platform managed \
+            --region europe-west1 \
+            --allow-unauthenticated \
+            --set-env-vars="OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" \
+            --set-env-vars="TAVILY_API_KEY=${{ secrets.TAVILY_API_KEY }}" \
+            --set-env-vars="LANGFUSE_PUBLIC_KEY=${{ secrets.LANGFUSE_PUBLIC_KEY }}" \
+            --set-env-vars="LANGFUSE_SECRET_KEY=${{ secrets.LANGFUSE_SECRET_KEY }}" \
+            --set-env-vars="LANGFUSE_BASE_URL=${{ secrets.LANGFUSE_BASE_URL }}" \
+            --set-env-vars="ENV=production" \
+            --set-env-vars="VERSION=${{ needs.release-please.outputs.tag_name }}" \
+            --memory 1Gi \
+            --cpu 1 \
+            --timeout 300 \
+            --max-instances 3 \
+            --min-instances 0

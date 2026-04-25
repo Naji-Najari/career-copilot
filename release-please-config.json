@@ -1,0 +1,16 @@
+{
+  "packages": {
+    "backend": {
+      "release-type": "python",
+      "package-name": "career-copilot-backend",
+      "include-component-in-tag": false,
+      "changelog-sections": [
+        { "type": "feat", "section": "Features" },
+        { "type": "fix", "section": "Bug Fixes" },
+        { "type": "perf", "section": "Performance Improvements" },
+        { "type": "docs", "section": "Documentation", "hidden": true },
+        { "type": "chore", "section": "Miscellaneous Chores", "hidden": true }
+      ]
+    }
+  }
+}
