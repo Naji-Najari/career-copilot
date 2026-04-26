@@ -50,8 +50,9 @@ flowchart LR
     VR -- fit / borderline --> OW["Outreach Writer<br/><i>medium</i>"]:::agent
     VR -- no_fit --> GE[Gap Explainer]:::agent
 
-    MR -- candidate --> RA["🔎 Research Agent<br/><i>via Tavily MCP</i>"]:::tool_agent
-    MR -- candidate --> CO[CV Optimizer]:::agent
+    MR -- candidate --> CFORK((·)):::fork
+    CFORK --> RA["🔎 Research Agent<br/><i>via Tavily MCP</i>"]:::tool_agent
+    CFORK --> CO[CV Optimizer]:::agent
     RA --> IP[Interview Prep]:::agent
     CO --> IP
 
@@ -62,6 +63,7 @@ flowchart LR
     classDef agent fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1
     classDef tool_agent fill:#FFF3E0,stroke:#E65100,stroke-width:2px,color:#BF360C
     classDef router fill:#E8F5E9,stroke:#2E7D32,stroke-width:1.5px,color:#1B5E20
+    classDef fork fill:#9E9E9E,stroke:#616161,stroke-width:1px,color:#9E9E9E
     classDef io fill:#F5F5F5,stroke:#616161,stroke-width:1px,color:#212121
 ```
 
