@@ -51,7 +51,7 @@ flowchart LR
     VR -- no_fit --> GE[Gap Explainer]:::agent
 
     MR -- candidate --> CFORK((·)):::fork
-    CFORK --> RA["🔎 Research Agent<br/><i>via Tavily MCP</i>"]:::tool_agent
+    CFORK --> RA["Research Agent<br/><b style='color:#CA8A04'>+ Tavily MCP</b>"]:::agent
     CFORK --> CO[CV Optimizer]:::agent
     RA --> IP[Interview Prep]:::agent
     CO --> IP
@@ -61,13 +61,10 @@ flowchart LR
     IP --> OUT3(["CandidateResp"]):::io
 
     classDef agent fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1
-    classDef tool_agent fill:#FFF3E0,stroke:#E65100,stroke-width:2px,color:#BF360C
     classDef router fill:#E8F5E9,stroke:#2E7D32,stroke-width:1.5px,color:#1B5E20
     classDef fork fill:#9E9E9E,stroke:#616161,stroke-width:1px,color:#9E9E9E
     classDef io fill:#F5F5F5,stroke:#616161,stroke-width:1px,color:#212121
 ```
-
-**Legend** — blue: LLM agents · orange: LLM agent + external tool (MCP) · green: routers · grey: HTTP I/O.
 
 CV and JD are parsed in parallel before the Mode Router splits the flow. In candidate mode, Research Agent (Tavily-grounded) and CV Optimizer run in parallel; Interview Prep then synthesizes both alongside the company intel. (Internal `JoinNode`s are omitted from the diagram for clarity — see `app/agent/agent.py`.)
 
