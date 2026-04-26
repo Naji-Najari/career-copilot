@@ -13,6 +13,7 @@ import {
   FileText,
   Lightbulb,
   MailCheck,
+  MessageCircle,
   MinusCircle,
   Sparkles,
   TriangleAlert,
@@ -27,6 +28,7 @@ import {
   isRecruiterNoFit,
   type AnalyzeResponse,
   type CandidateResponse,
+  type CVOptimizationBundle,
   type FitVerdict,
   type GapReport,
   type InterviewPrepBundle,
@@ -307,7 +309,8 @@ function CandidateView({ data }: { data: CandidateResponse }) {
   return (
     <ResponseGrid>
       <CompanyCard company={data.prep.company} />
-      <InterviewPrepCard prep={data.prep.interview_prep} />
+      <CVOptimizationsSpread bundle={data.prep.cv_optimizations} />
+      <QuestionsSpread prep={data.prep.interview_prep} />
     </ResponseGrid>
   );
 }
@@ -321,24 +324,30 @@ function CandidateView({ data }: { data: CandidateResponse }) {
 // (See https://animata.design/docs/card/card-spread for the underlying
 // pattern — adapted here for strengths/gaps mini-cards.)
 
-type Tone = "emerald" | "amber" | "rose";
+type Tone = "emerald" | "amber" | "rose" | "sky" | "violet";
 
 const TONE_TEXT: Record<Tone, string> = {
   emerald: "text-emerald-600 dark:text-emerald-400",
   amber: "text-amber-600 dark:text-amber-400",
   rose: "text-rose-600 dark:text-rose-400",
+  sky: "text-sky-600 dark:text-sky-400",
+  violet: "text-violet-600 dark:text-violet-400",
 };
 
 const TONE_BG: Record<Tone, string> = {
   emerald: "bg-emerald-500/10",
   amber: "bg-amber-500/10",
   rose: "bg-rose-500/10",
+  sky: "bg-sky-500/10",
+  violet: "bg-violet-500/10",
 };
 
 const TONE_BORDER: Record<Tone, string> = {
   emerald: "border-emerald-500/40",
   amber: "border-amber-500/40",
   rose: "border-rose-500/40",
+  sky: "border-sky-500/40",
+  violet: "border-violet-500/40",
 };
 
 function FitTriptych({ verdict }: { verdict: FitVerdict }) {
@@ -423,7 +432,7 @@ function VerdictBanner({
   );
 }
 
-type SpreadItem = { headline: string; body: string };
+type SpreadItem = { headline: string; body?: string };
 
 // Cards splay out symmetrically from the center: small alternating tilt,
 // further-from-center cards sit slightly lower and overlap their neighbours.
@@ -532,10 +541,11 @@ function SpreadCard({
   label,
 }: {
   headline: string;
-  body: string;
+  body?: string;
   tone: Tone;
   label: string;
 }) {
+  const hasBody = Boolean(body && body.trim().length > 0);
   return (
     <div
       className={cn(
@@ -552,12 +562,21 @@ function SpreadCard({
       >
         {label}
       </div>
-      <p className="text-foreground mb-1.5 line-clamp-3 text-xs leading-snug font-semibold">
+      <p
+        className={cn(
+          "text-foreground font-semibold",
+          hasBody
+            ? "mb-1.5 line-clamp-3 text-xs leading-snug"
+            : "min-h-0 flex-1 overflow-y-auto text-[13px] leading-snug",
+        )}
+      >
         {headline}
       </p>
-      <p className="text-muted-foreground min-h-0 flex-1 overflow-y-auto text-[11px] leading-relaxed">
-        {body}
-      </p>
+      {hasBody && (
+        <p className="text-muted-foreground min-h-0 flex-1 overflow-y-auto text-[11px] leading-relaxed">
+          {body}
+        </p>
+      )}
     </div>
   );
 }
@@ -625,96 +644,127 @@ function CompanyCard({
 }: {
   company: CandidateResponse["prep"]["company"];
 }) {
+  const news = company.recent_news.slice(0, 3);
+  const culture = company.culture_signals.slice(0, 3);
+  // Only surface the agency note when it actually adds info — i.e. the JD
+  // routes through an agency AND we have a distinct end employer to point at.
+  // A bare "agency posting · real employer not identified" line is just noise.
+  const agencySubtitle =
+    company.is_likely_agency_posting && company.probable_real_employer
+      ? `Agency posting · probable employer: ${company.probable_real_employer}`
+      : null;
+
   return (
     <Card>
-      <CardHeader
-        icon={Building2}
-        title={company.company_name}
-        meta={
-          company.funding_stage ? (
-            <span className="text-muted-foreground text-xs">
-              {company.funding_stage}
-            </span>
-          ) : null
-        }
-      />
+      <div className="mb-5 flex items-start gap-3">
+        <div className="bg-muted/60 flex size-10 shrink-0 items-center justify-center rounded-full">
+          <Building2 className="text-foreground/70 size-5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <h3 className="text-foreground truncate text-xl font-bold">
+            {company.company_name}
+          </h3>
+          {agencySubtitle && (
+            <p className="text-muted-foreground mt-0.5 text-xs leading-relaxed">
+              {agencySubtitle}
+            </p>
+          )}
+        </div>
+        {company.funding_stage && (
+          <span className="bg-muted/60 text-muted-foreground inline-flex shrink-0 items-center rounded-md px-2 py-0.5 text-xs font-medium capitalize">
+            {company.funding_stage}
+          </span>
+        )}
+      </div>
 
-      {company.is_likely_agency_posting && (
-        <Alert variant="destructive" className="mb-4">
-          <TriangleAlert />
-          <AlertTitle>Agency posting detected</AlertTitle>
-          <AlertDescription>
-            {company.probable_real_employer ? (
-              <p>
-                Probable real employer:{" "}
-                <span className="font-medium">
-                  {company.probable_real_employer}
-                </span>
-              </p>
-            ) : (
-              <p>
-                The real employer could not be identified from the research.
-              </p>
-            )}
-            {company.agency_evidence.length > 0 && (
-              <ul className="mt-1 list-disc pl-4 text-xs">
-                {company.agency_evidence.map((e, i) => (
-                  <li key={i}>{e}</li>
-                ))}
-              </ul>
-            )}
-          </AlertDescription>
-        </Alert>
+      {(news.length > 0 || culture.length > 0) && (
+        <div className="mb-5 grid gap-3 md:grid-cols-2">
+          {news.map((item, i) => (
+            <CompanyMiniCard
+              key={`news-${i}`}
+              label="News"
+              tone="sky"
+              text={item}
+            />
+          ))}
+          {culture.map((item, i) => (
+            <CompanyMiniCard
+              key={`culture-${i}`}
+              label="Culture"
+              tone="violet"
+              text={item}
+            />
+          ))}
+        </div>
       )}
 
-      {company.recent_news.length > 0 && (
-        <SubSection title="Recent news" className="mb-4">
-          <BulletList items={company.recent_news} />
-        </SubSection>
-      )}
-      {company.culture_signals.length > 0 && (
-        <SubSection title="Culture signals" className="mb-4">
-          <BulletList items={company.culture_signals} />
-        </SubSection>
-      )}
-      {company.interview_process_hints.length > 0 && (
-        <SubSection title="Interview process hints" className="mb-4">
-          <BulletList items={company.interview_process_hints} />
-        </SubSection>
-      )}
       {company.sources.length > 0 && (
-        <SubSection title="Sources">
+        <div className="border-border border-t pt-4">
+          <h4 className="text-muted-foreground mb-2 text-[11px] font-semibold tracking-wider uppercase">
+            Sources
+          </h4>
           <div className="flex flex-wrap gap-2">
             {company.sources.map((url) => (
               <SourceLink key={url} url={url} />
             ))}
           </div>
-        </SubSection>
+        </div>
       )}
     </Card>
   );
 }
 
-function InterviewPrepCard({ prep }: { prep: InterviewPrepBundle }) {
+function CompanyMiniCard({
+  label,
+  tone,
+  text,
+}: {
+  label: string;
+  tone: Tone;
+  text: string;
+}) {
   return (
-    <Card>
-      <CardHeader icon={Lightbulb} title="Interview prep" />
-      {prep.probable_questions.length > 0 && (
-        <SubSection title="Probable questions" className="mb-4">
-          <BulletList items={prep.probable_questions} />
-        </SubSection>
-      )}
-      {prep.talking_points.length > 0 && (
-        <SubSection title="Talking points" className="mb-4">
-          <BulletList items={prep.talking_points} />
-        </SubSection>
-      )}
-      {prep.reverse_questions.length > 0 && (
-        <SubSection title="Smart reverse questions">
-          <BulletList items={prep.reverse_questions} />
-        </SubSection>
-      )}
-    </Card>
+    <div className="bg-muted/30 hover:bg-muted/50 flex flex-col gap-1.5 rounded-xl border p-4 transition-colors">
+      <span
+        className={cn(
+          "inline-flex w-max items-center rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wider uppercase",
+          TONE_BG[tone],
+          TONE_TEXT[tone],
+        )}
+      >
+        {label}
+      </span>
+      <p className="text-foreground/90 text-sm leading-relaxed">{text}</p>
+    </div>
+  );
+}
+
+function CVOptimizationsSpread({ bundle }: { bundle: CVOptimizationBundle }) {
+  return (
+    <SpreadSection
+      icon={Lightbulb}
+      label="CV optimizations"
+      tone="sky"
+      singularLabel="Tip"
+      emptyText="Your CV already aligns well with this role."
+      items={bundle.recommendations.map((r) => ({
+        headline: r.headline,
+        body: r.rationale,
+      }))}
+    />
+  );
+}
+
+function QuestionsSpread({ prep }: { prep: InterviewPrepBundle }) {
+  return (
+    <SpreadSection
+      icon={MessageCircle}
+      label="Likely questions"
+      tone="violet"
+      singularLabel="Q"
+      emptyText="No high-confidence questions surfaced."
+      items={prep.probable_questions.map((q) => ({ headline: q }))}
+    />
   );
 }
 

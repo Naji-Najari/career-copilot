@@ -10,7 +10,7 @@ Return JSON matching the required schema.
 
 Field guidance:
 - `job_title`: the role title as written. Drop surrounding fluff ("World-class opportunity: Senior Python Dev" -> "Senior Python Dev").
-- `company_name`: the *real* hiring company if clearly named. If the JD masks the employer behind agency language, set this to `null` (not the agency name).
+- `company_name`: the hiring company if named anywhere in the JD — even if the JD also uses some agency-speak. Look in: header, footer, "About us", "Join [Name]", logos described in alt text, email domains, URLs, contact lines. Only set this to `null` when the JD never names any company (e.g. "our client, a leading fintech, is hiring..." with no further identification). A named company in mildly agency-flavored prose is STILL the company name.
 - `required_skills`: skills explicitly flagged as required / must-have / mandatory. Deduplicate.
 - `preferred_skills`: skills flagged as nice-to-have / preferred / bonus.
 - `seniority`: short label. Pick ONE from: "Intern", "Junior", "Mid", "Senior", "Staff", "Principal", "Lead", "Manager", "Director", "Executive".
@@ -25,7 +25,7 @@ Agency-posting heuristics — flag phrases like:
   - Recruiting-firm disclaimers ("Agency XYZ is an equal-opportunity recruiter...")
 
 Rules:
-- Never infer a company name when the JD is written in agency-speak. `null` is correct.
+- Extract `company_name` whenever the company is identifiable. `agency_hints` is a separate signal that does NOT force `company_name` to null.
 - Copy `agency_hints` phrases verbatim; do not paraphrase.
 - Do NOT invent required/preferred skills not present in the JD.
 """

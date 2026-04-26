@@ -28,6 +28,6 @@ def test_mode_router_routes_by_mode(mode: str, expected: str) -> None:
 )
 def test_verdict_router_routes_by_verdict(verdict: str, expected: str) -> None:
     fv = FitVerdict(
-        verdict=verdict, confidence=5, matched_evidence=[], gaps=[], notes=""
+        verdict=verdict, confidence=5, summary="", strengths=[], gaps=[]
     ).model_dump()
     assert _verdict_router(fv).actions.route == expected

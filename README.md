@@ -32,13 +32,13 @@ Recruiters get a fit verdict and an outreach draft citing a real achievement fro
 
 **Recruiter mode** — evaluates candidate fit against the JD. On fit / borderline, drafts a personalized LinkedIn outreach message citing a specific achievement from the CV. On no-fit, explains the gaps clearly and suggests adjacent roles.
 
-**Candidate mode** — company research via Tavily MCP (funding, culture, Glassdoor, agency-posting detection) plus tailored interview prep (probable questions, talking points, smart reverse questions).
+**Candidate mode** — company research via Tavily MCP (funding, culture, Glassdoor, agency-posting detection), strategic CV-positioning recommendations against the JD, and tailored probable-questions for the interview.
 
 ## Graph
 
 ```mermaid
-flowchart TD
-    IN(["CV + JD + mode"]):::io
+flowchart LR
+    IN(["CV + JD<br/>+ mode"]):::io
 
     IN --> CV[CV Parser]:::agent
     IN --> JD[JD Parser]:::agent
@@ -47,20 +47,22 @@ flowchart TD
     PJ --> MR{Mode Router}:::code
 
     MR -- recruiter --> FA[Fit Analyzer]:::agent
-    MR -- candidate --> RA[Research Agent]:::agent
-
     FA --> VR{Verdict Router}:::code
-    VR -- fit / borderline --> OW["Outreach Writer<br/><i>medium reasoning</i>"]:::agent
+    VR -- fit / borderline --> OW["Outreach Writer<br/><i>medium</i>"]:::agent
     VR -- no_fit --> GE[Gap Explainer]:::agent
 
-    RA --> IP[Interview Prep]:::agent
+    MR -- candidate --> RA[Research Agent]:::agent
+    MR -- candidate --> CO[CV Optimizer]:::agent
+    RA --> CJ[/candidate_join/]:::code
+    CO --> CJ
+    CJ --> IP[Interview Prep]:::agent
 
     TV((Tavily MCP)):::tool
     TV -. tavily-search<br/>tavily-extract .-> RA
 
-    OW --> OUT1(["RecruiterFitResponse"]):::io
-    GE --> OUT2(["RecruiterNoFitResponse"]):::io
-    IP --> OUT3(["CandidateResponse"]):::io
+    OW --> OUT1(["RecruiterFit"]):::io
+    GE --> OUT2(["RecruiterNoFit"]):::io
+    IP --> OUT3(["CandidateResp"]):::io
 
     classDef agent fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1
     classDef code fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20
@@ -68,9 +70,9 @@ flowchart TD
     classDef io fill:#F5F5F5,stroke:#616161,stroke-width:1px,color:#212121
 ```
 
-**Legend** — blue: LLM agents · green: pure-Python nodes (routers, join) · orange (dashed): external tools via MCP · grey: HTTP I/O.
+**Legend** — blue: LLM agents · green: pure-Python nodes (routers, joins) · orange (dashed): external tools via MCP · grey: HTTP I/O.
 
-CV and JD are parsed in parallel (independent extractions — halves preprocessing latency). `parse_join` synchronizes before the mode split. The `is_likely_agency_posting` signal is set during JD parsing (lexical hints) and confirmed by the Research Agent (web-sourced via Tavily) in candidate mode.
+CV and JD are parsed in parallel (independent extractions — halves preprocessing latency); `parse_join` synchronizes before the mode split. In candidate mode, Research Agent (Tavily-grounded) and CV Optimizer (parsed CV + JD only) run in parallel; `candidate_join` synchronizes before Interview Prep, which depends on the company intel.
 
 ## Architecture
 
@@ -79,15 +81,16 @@ Google ADK v2 graph-based `Workflow(edges=[...])`. Every LLM node has a typed Py
 **Agents (LLM — OpenAI `gpt-5.4-mini` via LiteLlm)**
 - **CV Parser** — `ParsedCV` (skills, years of experience, achievements, languages).
 - **JD Parser** — `ParsedJD` (title, company, required/preferred skills, seniority, agency hints).
-- **Fit Analyzer** — `FitVerdict` (fit / borderline / no_fit, confidence, matched evidence, gaps).
+- **Fit Analyzer** — `FitVerdict` (fit / borderline / no_fit, confidence, summary, strengths, gaps).
 - **Outreach Writer** — higher reasoning effort. `OutreachDraft` citing a specific CV achievement.
 - **Gap Explainer** — `GapReport` (gaps, explanation, adjacent roles).
 - **Research Agent** — Tavily via MCP. Emits `CompanyIntelligence` as a JSON string.
-- **Interview Prep** — `InterviewPrepBundle` (probable questions, talking points, reverse questions).
+- **CV Optimizer** — `CVOptimizationBundle` (0–5 strategic positioning recommendations against the JD).
+- **Interview Prep** — `InterviewPrepBundle` (probable questions tailored to the JD + company signals).
 
 **Code nodes (no LLM)**
 - `mode_router`, `verdict_router` — `FunctionNode`s that return `Event(route=...)`.
-- `parse_join` — ADK `JoinNode` synchronizing the parallel parsers.
+- `parse_join`, `candidate_join` — ADK `JoinNode`s synchronizing the parallel parsers and the candidate-branch fan-out.
 
 ## Tech stack
 
@@ -96,7 +99,7 @@ Google ADK v2 graph-based `Workflow(edges=[...])`. Every LLM node has a typed Py
 | Backend  | Python 3.12, FastAPI, Google ADK v2, uv                         |
 | Models   | OpenAI `gpt-5.4-mini` via `LiteLlm` (low reasoning by default, medium for Outreach Writer) |
 | Research | Tavily via MCP (`McpToolset` + remote HTTP endpoint)            |
-| Frontend | TBD — Next.js app coming next                                   |
+| Frontend | Next.js 15 (App Router), React 19, Tailwind 4 + shadcn/ui, TanStack Query |
 | Deploy   | Dockerfile for Cloud Run / HuggingFace Spaces                   |
 
 ## Setup

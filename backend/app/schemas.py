@@ -134,14 +134,33 @@ class InterviewPrepBundle(BaseModel):
     """Output of the Interview Prep agent."""
 
     probable_questions: list[str] = Field(default_factory=list)
-    talking_points: list[str] = Field(default_factory=list)
-    reverse_questions: list[str] = Field(default_factory=list)
+
+
+class CVOptimization(BaseModel):
+    """A single strategic CV-positioning recommendation."""
+
+    headline: str = Field(description="One-line, action-oriented advice.")
+    rationale: str = Field(
+        description=(
+            "Why this matters for THIS JD — 1-2 sentences grounded in a "
+            "specific JD requirement or company signal."
+        )
+    )
+
+
+class CVOptimizationBundle(BaseModel):
+    """Output of the CV Optimizer agent."""
+
+    recommendations: list[CVOptimization] = Field(
+        default_factory=list, max_length=5
+    )
 
 
 class PrepBundle(BaseModel):
     """Final candidate-mode payload (assembled by the API handler)."""
 
     company: CompanyIntelligence
+    cv_optimizations: CVOptimizationBundle
     interview_prep: InterviewPrepBundle
 
 

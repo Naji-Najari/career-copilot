@@ -10,6 +10,7 @@ from app.schemas import (
     AnalyzeRequest,
     CandidateResponse,
     CompanyIntelligence,
+    CVOptimizationBundle,
     FitVerdict,
     GapReport,
     InterviewPrepBundle,
@@ -119,7 +120,8 @@ def _build_recruiter_response(
 
 
 def _build_candidate_response(state: dict) -> CandidateResponse:
-    missing = [k for k in ("company_intel", "interview_prep") if not state.get(k)]
+    required = ("company_intel", "cv_optimizations", "interview_prep")
+    missing = [k for k in required if not state.get(k)]
     if missing:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -135,6 +137,9 @@ def _build_candidate_response(state: dict) -> CandidateResponse:
     return CandidateResponse(
         prep=PrepBundle(
             company=company,
+            cv_optimizations=CVOptimizationBundle.model_validate(
+                state["cv_optimizations"]
+            ),
             interview_prep=InterviewPrepBundle.model_validate(state["interview_prep"]),
         )
     )

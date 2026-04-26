@@ -43,12 +43,20 @@ export type CompanyIntelligence = {
 
 export type InterviewPrepBundle = {
   probable_questions: string[];
-  talking_points: string[];
-  reverse_questions: string[];
+};
+
+export type CVOptimization = {
+  headline: string;
+  rationale: string;
+};
+
+export type CVOptimizationBundle = {
+  recommendations: CVOptimization[];
 };
 
 export type PrepBundle = {
   company: CompanyIntelligence;
+  cv_optimizations: CVOptimizationBundle;
   interview_prep: InterviewPrepBundle;
 };
 
