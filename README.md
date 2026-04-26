@@ -42,37 +42,32 @@ flowchart LR
 
     IN --> CV[CV Parser]:::agent
     IN --> JD[JD Parser]:::agent
-    CV --> PJ[/parse_join/]:::code
-    JD --> PJ
-    PJ --> MR{Mode Router}:::code
+    CV --> MR(["Mode Router"]):::router
+    JD --> MR
 
     MR -- recruiter --> FA[Fit Analyzer]:::agent
-    FA --> VR{Verdict Router}:::code
+    FA --> VR(["Verdict Router"]):::router
     VR -- fit / borderline --> OW["Outreach Writer<br/><i>medium</i>"]:::agent
     VR -- no_fit --> GE[Gap Explainer]:::agent
 
-    MR -- candidate --> RA[Research Agent]:::agent
+    MR -- candidate --> RA["🔎 Research Agent<br/><i>via Tavily MCP</i>"]:::tool_agent
     MR -- candidate --> CO[CV Optimizer]:::agent
-    RA --> CJ[/candidate_join/]:::code
-    CO --> CJ
-    CJ --> IP[Interview Prep]:::agent
-
-    TV((Tavily MCP)):::tool
-    TV -. tavily-search<br/>tavily-extract .-> RA
+    RA --> IP[Interview Prep]:::agent
+    CO --> IP
 
     OW --> OUT1(["RecruiterFit"]):::io
     GE --> OUT2(["RecruiterNoFit"]):::io
     IP --> OUT3(["CandidateResp"]):::io
 
     classDef agent fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1
-    classDef code fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20
-    classDef tool fill:#FFF3E0,stroke:#E65100,stroke-width:2px,stroke-dasharray:6 4,color:#BF360C
+    classDef tool_agent fill:#FFF3E0,stroke:#E65100,stroke-width:2px,color:#BF360C
+    classDef router fill:#E8F5E9,stroke:#2E7D32,stroke-width:1.5px,color:#1B5E20
     classDef io fill:#F5F5F5,stroke:#616161,stroke-width:1px,color:#212121
 ```
 
-**Legend** — blue: LLM agents · green: pure-Python nodes (routers, joins) · orange (dashed): external tools via MCP · grey: HTTP I/O.
+**Legend** — blue: LLM agents · orange: LLM agent + external tool (MCP) · green: routers · grey: HTTP I/O.
 
-CV and JD are parsed in parallel (independent extractions — halves preprocessing latency); `parse_join` synchronizes before the mode split. In candidate mode, Research Agent (Tavily-grounded) and CV Optimizer (parsed CV + JD only) run in parallel; `candidate_join` synchronizes before Interview Prep, which depends on the company intel.
+CV and JD are parsed in parallel before the Mode Router splits the flow. In candidate mode, Research Agent (Tavily-grounded) and CV Optimizer run in parallel; Interview Prep then synthesizes both alongside the company intel. (Internal `JoinNode`s are omitted from the diagram for clarity — see `app/agent/agent.py`.)
 
 ## Architecture
 

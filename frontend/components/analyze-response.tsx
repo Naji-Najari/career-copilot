@@ -20,6 +20,13 @@ import {
 } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import {
@@ -36,7 +43,7 @@ import {
   type RecruiterFitResponse,
   type RecruiterNoFitResponse,
 } from "@/lib/api";
-import type { AnalyzeInput } from "@/lib/schemas";
+import type { AnalyzeInput, Mode } from "@/lib/schemas";
 
 type MutationState = UseMutationResult<
   AnalyzeResponse,
@@ -46,7 +53,8 @@ type MutationState = UseMutationResult<
 >;
 
 export function AnalyzeResponseView({ mutation }: { mutation: MutationState }) {
-  if (mutation.isPending) return <LoadingState />;
+  if (mutation.isPending)
+    return <LoadingState mode={mutation.variables?.mode ?? "recruiter"} />;
   if (mutation.isError) return <ErrorState message={mutation.error.message} />;
   if (mutation.isSuccess) return <SuccessState data={mutation.data} />;
   return <IdleState />;
@@ -68,28 +76,73 @@ function IdleState() {
   );
 }
 
-function LoadingState() {
+function LoadingState({ mode }: { mode: Mode }) {
   return (
     <ResponseGrid>
       <ThinkingFlow />
-      <VerdictBannerSkeleton />
+      {mode === "candidate" ? (
+        <CompanyHeroSkeleton />
+      ) : (
+        <VerdictBannerSkeleton />
+      )}
       <SpreadSectionSkeleton />
       <SpreadSectionSkeleton />
-      <Card>
-        <div className="mb-4 flex items-center gap-2">
-          <Sparkles className="text-foreground/40 size-4 shrink-0" />
-          <Skeleton className="h-4 w-40" />
-        </div>
-        <div className="flex flex-col gap-2.5">
-          <Skeleton className="h-3 w-full" />
-          <Skeleton className="h-3 w-[94%]" />
-          <Skeleton className="h-3 w-[88%]" />
-          <Skeleton className="h-3 w-[72%]" />
-          <Skeleton className="h-3 w-[80%]" />
-          <Skeleton className="h-3 w-[64%]" />
-        </div>
-      </Card>
+      {mode === "recruiter" && <OutreachCardSkeleton />}
     </ResponseGrid>
+  );
+}
+
+function CompanyHeroSkeleton() {
+  return (
+    <div className="bg-card rounded-xl border p-6">
+      <div className="mb-5 flex items-start gap-3">
+        <Skeleton className="size-10 shrink-0 rounded-full" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <Skeleton className="h-5 w-44" />
+          <Skeleton className="h-3 w-60" />
+        </div>
+        <Skeleton className="h-5 w-20 shrink-0 rounded-md" />
+      </div>
+      <div className="mb-5 grid gap-3 md:grid-cols-2">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div
+            key={i}
+            className="bg-muted/30 flex flex-col gap-2 rounded-xl border p-4"
+          >
+            <Skeleton className="h-3 w-14 rounded-md" />
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-3 w-[80%]" />
+          </div>
+        ))}
+      </div>
+      <div className="border-border border-t pt-4">
+        <Skeleton className="mb-2 h-3 w-16" />
+        <div className="flex gap-2">
+          <Skeleton className="h-6 w-24 rounded-lg" />
+          <Skeleton className="h-6 w-28 rounded-lg" />
+          <Skeleton className="h-6 w-20 rounded-lg" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OutreachCardSkeleton() {
+  return (
+    <Card>
+      <div className="mb-4 flex items-center gap-2">
+        <Sparkles className="text-foreground/40 size-4 shrink-0" />
+        <Skeleton className="h-4 w-40" />
+      </div>
+      <div className="flex flex-col gap-2.5">
+        <Skeleton className="h-3 w-full" />
+        <Skeleton className="h-3 w-[94%]" />
+        <Skeleton className="h-3 w-[88%]" />
+        <Skeleton className="h-3 w-[72%]" />
+        <Skeleton className="h-3 w-[80%]" />
+        <Skeleton className="h-3 w-[64%]" />
+      </div>
+    </Card>
   );
 }
 
@@ -438,6 +491,14 @@ type SpreadItem = { headline: string; body?: string };
 // further-from-center cards sit slightly lower and overlap their neighbours.
 // Pattern adapted from animata.design/docs/hero/product-features (without
 // motion/react — pure CSS transforms + tw-animate-css for the entrance).
+const ROW_MAX = 5;
+
+function chunk<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
 function SpreadSection({
   icon: Icon,
   label,
@@ -454,6 +515,9 @@ function SpreadSection({
   items: SpreadItem[];
 }) {
   const count = items.length;
+  const [openIdx, setOpenIdx] = React.useState<number | null>(null);
+  const activeItem = openIdx !== null ? items[openIdx] : null;
+  const rows = React.useMemo(() => chunk(items, ROW_MAX), [items]);
 
   return (
     <div className="flex flex-col gap-3">
@@ -483,54 +547,144 @@ function SpreadSection({
           {/* Mobile: simple stack */}
           <div className="flex flex-col gap-3 sm:hidden">
             {items.map((item, i) => (
-              <SpreadCard
+              <SpreadCardButton
                 key={i}
-                headline={item.headline}
-                body={item.body}
-                tone={tone}
-                label={`${singularLabel} ${i + 1}`}
-              />
+                onClick={() => setOpenIdx(i)}
+                ariaLabel={`${singularLabel} ${i + 1}: ${item.headline}`}
+                className="w-full"
+              >
+                <SpreadCard
+                  headline={item.headline}
+                  body={item.body}
+                  tone={tone}
+                  label={`${singularLabel} ${i + 1}`}
+                />
+              </SpreadCardButton>
             ))}
           </div>
-          {/* Desktop: fanned overlap */}
-          <div className="mx-auto hidden w-fit items-end justify-center sm:flex">
-            {items.map((item, i) => {
-              const offset = i - (count - 1) / 2;
-              const angle = offset * 5;
-              const yShift = Math.abs(offset) * 6;
-              const zBase = 10 - Math.round(Math.abs(offset));
+          {/* Desktop: rows of fanned cards (5 per row max) */}
+          <div className="hidden flex-col gap-8 sm:flex">
+            {rows.map((row, rowIdx) => {
+              const rowCount = row.length;
               return (
                 <div
-                  key={i}
-                  style={
-                    {
-                      "--rest-rot": `${angle}deg`,
-                      "--rest-y": `${yShift}px`,
-                      "--rest-z": zBase,
-                      "--rest-ml": i === 0 ? "0px" : "-2.25rem",
-                      animationDelay: `${i * 80}ms`,
-                    } as React.CSSProperties
-                  }
-                  className={cn(
-                    "animate-in fade-in slide-in-from-bottom-4 origin-bottom transition-all duration-300 ease-out",
-                    "z-[var(--rest-z)] [margin-left:var(--rest-ml)]",
-                    "[transform:translateY(var(--rest-y))_rotate(var(--rest-rot))]",
-                    "hover:z-20 hover:[transform:translateY(-10px)_rotate(0deg)_scale(1.08)]",
-                  )}
+                  key={rowIdx}
+                  className="mx-auto flex w-fit items-end justify-center"
                 >
-                  <SpreadCard
-                    headline={item.headline}
-                    body={item.body}
-                    tone={tone}
-                    label={`${singularLabel} ${i + 1}`}
-                  />
+                  {row.map((item, localIdx) => {
+                    const i = rowIdx * ROW_MAX + localIdx;
+                    const offset = localIdx - (rowCount - 1) / 2;
+                    const angle = offset * 5;
+                    const yShift = Math.abs(offset) * 6;
+                    const zBase = 10 - Math.round(Math.abs(offset));
+                    return (
+                      <SpreadCardButton
+                        key={i}
+                        onClick={() => setOpenIdx(i)}
+                        ariaLabel={`${singularLabel} ${i + 1}: ${item.headline}`}
+                        style={
+                          {
+                            "--rest-rot": `${angle}deg`,
+                            "--rest-y": `${yShift}px`,
+                            "--rest-z": zBase,
+                            "--rest-ml":
+                              localIdx === 0 ? "0px" : "-2.25rem",
+                            animationDelay: `${i * 80}ms`,
+                          } as React.CSSProperties
+                        }
+                        className={cn(
+                          "animate-in fade-in slide-in-from-bottom-4 origin-bottom transition-all duration-300 ease-out",
+                          "z-[var(--rest-z)] [margin-left:var(--rest-ml)]",
+                          "[transform:translateY(var(--rest-y))_rotate(var(--rest-rot))]",
+                          "hover:z-20 hover:[transform:translateY(-10px)_rotate(0deg)_scale(1.08)]",
+                        )}
+                      >
+                        <SpreadCard
+                          headline={item.headline}
+                          body={item.body}
+                          tone={tone}
+                          label={`${singularLabel} ${i + 1}`}
+                        />
+                      </SpreadCardButton>
+                    );
+                  })}
                 </div>
               );
             })}
           </div>
         </div>
       )}
+
+      <Dialog
+        open={openIdx !== null}
+        onOpenChange={(o) => {
+          if (!o) setOpenIdx(null);
+        }}
+      >
+        <DialogContent
+          className={cn("sm:max-w-2xl border-2", TONE_BORDER[tone])}
+        >
+          {activeItem && (
+            <>
+              <DialogHeader className="gap-3">
+                <span
+                  className={cn(
+                    "inline-flex w-max items-center gap-1.5 rounded-md px-2 py-0.5 text-[10px] font-semibold tracking-wider uppercase",
+                    TONE_BG[tone],
+                    TONE_TEXT[tone],
+                  )}
+                >
+                  <Icon className="size-3" />
+                  {singularLabel} {(openIdx ?? 0) + 1}
+                </span>
+                <DialogTitle className="text-foreground text-xl leading-snug font-bold">
+                  {activeItem.headline}
+                </DialogTitle>
+                {activeItem.body ? (
+                  <DialogDescription className="text-foreground/80 text-sm leading-relaxed whitespace-pre-line">
+                    {activeItem.body}
+                  </DialogDescription>
+                ) : (
+                  <DialogDescription className="sr-only">
+                    {activeItem.headline}
+                  </DialogDescription>
+                )}
+              </DialogHeader>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+}
+
+function SpreadCardButton({
+  onClick,
+  ariaLabel,
+  className,
+  style,
+  children,
+}: {
+  onClick: () => void;
+  ariaLabel: string;
+  className?: string;
+  style?: React.CSSProperties;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={ariaLabel}
+      style={style}
+      className={cn(
+        "appearance-none cursor-pointer rounded-xl text-left",
+        "focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
+        className,
+      )}
+    >
+      {children}
+    </button>
   );
 }
 
