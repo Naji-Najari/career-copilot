@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/Naji-Najari/career-copilot/compare/v0.2.4...v0.3.0) (2026-04-26)
+
+
+### Features
+
+* implement CV Optimizer agent for strategic CV positioning recommendations ([d4a3448](https://github.com/Naji-Najari/career-copilot/commit/d4a34480e6e5929d3d2ed4b0679031ef290f57fc))
+
 ## [0.2.4](https://github.com/Naji-Najari/career-copilot/compare/v0.2.3...v0.2.4) (2026-04-25)
 
 
