@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# trend-writer - Start script
+# career-copilot - Start script
 
-echo "Starting trend-writer..."
+echo "Starting career-copilot..."
 echo ""
 
 # Start backend
@@ -19,7 +19,7 @@ echo "Starting frontend on http://localhost:3000..."
 FRONTEND_PID=$!
 
 echo ""
-echo "trend-writer is running!"
+echo "career-copilot is running!"
 echo "  Backend:   http://localhost:8080"
 echo "  API docs:  http://localhost:8080/docs"
 echo "  Frontend:  http://localhost:3000"

@@ -10,14 +10,16 @@ from google.adk.models.lite_llm import LiteLlm
 
 from app.utils.constants import OPENAI_API_KEY
 
+PRIMARY_MODEL = "openai/gpt-5.4-mini"
+
 openai_mini = LiteLlm(
-    model="openai/gpt-5.4-mini",
+    model=PRIMARY_MODEL,
     api_key=OPENAI_API_KEY,
     reasoning_effort="low",
 )
 
 openai_mini_med = LiteLlm(
-    model="openai/gpt-5.4-mini",
+    model=PRIMARY_MODEL,
     api_key=OPENAI_API_KEY,
     reasoning_effort="medium",
 )

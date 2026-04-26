@@ -1,6 +1,1 @@
-def main():
-    print("Hello from trend-writer backend!")
-
-
-if __name__ == "__main__":
-    main()
+"""Vestigial stub from `uv init` — the real FastAPI app is `app.main:app`."""

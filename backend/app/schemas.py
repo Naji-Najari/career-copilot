@@ -117,13 +117,10 @@ class CompanyIntelligence(BaseModel):
     """Output of the Company Parser (structured projection of research notes)."""
 
     company_name: str
-    is_likely_agency_posting: bool
     probable_real_employer: str | None = None
-    agency_evidence: list[str] = Field(default_factory=list)
     funding_stage: str | None = None
     recent_news: list[str] = Field(default_factory=list)
     culture_signals: list[str] = Field(default_factory=list)
-    interview_process_hints: list[str] = Field(default_factory=list)
     sources: list[str] = Field(
         default_factory=list,
         description="URLs cited by the research agent.",
@@ -172,8 +169,9 @@ class PrepBundle(BaseModel):
 class AnalyzeRequest(BaseModel):
     """Input payload for POST /v1/analyze."""
 
-    cv_text: str = Field(min_length=1)
-    jd_text: str = Field(min_length=1)
+    # Bounds chosen as a safety cap rather than a calibrated quota
+    cv_text: str = Field(min_length=1, max_length=500_000)
+    jd_text: str = Field(min_length=1, max_length=500_000)
     mode: Mode
 
 

@@ -21,8 +21,9 @@ Produce a single list:
 Rules:
 - Tailor every question to THIS candidate and THIS company. Generic
   interview questions are a failure.
-- If the company JSON has `is_likely_agency_posting: true`, include at least
-  one question that probes the actual hiring team or end client.
+- If `probable_real_employer` is set in the company JSON (the JD is fronted
+  by an agency and the end client is identified), include at least one
+  question that probes the actual hiring team or end client.
 - Keep every question under ~25 words. One question per item.
 - Never restate the JD back to the candidate.
 """

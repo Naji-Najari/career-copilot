@@ -16,6 +16,7 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "langfuse>=3.11.2",
     "openinference-instrumentation-google-adk>=0.1.8",
+    "slowapi>=0.1.9",
 ]
 
 [dependency-groups]

@@ -31,13 +31,11 @@ export type GapReport = {
 
 export type CompanyIntelligence = {
   company_name: string;
-  is_likely_agency_posting: boolean;
+  // Agency posting iff probable_real_employer is non-null.
   probable_real_employer: string | null;
-  agency_evidence: string[];
   funding_stage: string | null;
   recent_news: string[];
   culture_signals: string[];
-  interview_process_hints: string[];
   sources: string[];
 };
 

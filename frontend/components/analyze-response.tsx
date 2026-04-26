@@ -800,13 +800,11 @@ function CompanyCard({
 }) {
   const news = company.recent_news.slice(0, 3);
   const culture = company.culture_signals.slice(0, 3);
-  // Only surface the agency note when it actually adds info — i.e. the JD
-  // routes through an agency AND we have a distinct end employer to point at.
-  // A bare "agency posting · real employer not identified" line is just noise.
-  const agencySubtitle =
-    company.is_likely_agency_posting && company.probable_real_employer
-      ? `Agency posting · probable employer: ${company.probable_real_employer}`
-      : null;
+  // Agency mention only when we know who's actually hiring — a bare
+  // "agency posting" with no real-employer pointer is just noise.
+  const agencySubtitle = company.probable_real_employer
+    ? `Agency posting · probable employer: ${company.probable_real_employer}`
+    : null;
 
   return (
     <Card>
