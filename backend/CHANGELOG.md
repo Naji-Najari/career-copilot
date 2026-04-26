@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/Naji-Najari/career-copilot/compare/v0.3.0...v0.4.0) (2026-04-26)
+
+
+### Features
+
+* implement rate limiting across API routes and enhance error handling ([dd3ec34](https://github.com/Naji-Najari/career-copilot/commit/dd3ec344753b446cab92d7ac266498046844129a))
+
 ## [0.3.0](https://github.com/Naji-Najari/career-copilot/compare/v0.2.4...v0.3.0) (2026-04-26)
 
 
