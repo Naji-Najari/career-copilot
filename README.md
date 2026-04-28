@@ -97,50 +97,9 @@ All agents run OpenAI `gpt-5.4-mini` via `LiteLlm`. The Outreach Writer is the o
 | CV Optimizer       | Candidate | `CVOptimizationBundle`    |
 | Interview Prep     | Candidate | `InterviewPrepBundle`     |
 
-## API
+## Tracing
 
-Two stateless POST endpoints. The `/v1/analyze` handler returns a discriminated union typed per mode, so the client always knows the response shape:
-
-```python
-AnalyzeResponse = Union[
-    RecruiterFitResponse,
-    RecruiterNoFitResponse,
-    CandidateResponse,
-]
-
-
-@router.post("/v1/analyze", response_model=AnalyzeResponse)
-async def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
-    state = await run_agent(root_agent, initial_state)
-    if request.mode == "recruiter":
-        return _build_recruiter_response(state)
-    return _build_candidate_response(state)
-```
-
-`/v1/extract-pdf` accepts a multipart upload, validates content-type and a 10 MB cap, and returns the concatenated page text.
-
-## Observability
-
-Every `/v1/analyze` request opens a parent agent observation in Langfuse. Sub-agent and tool calls nest under it as child spans, with inputs, outputs, latency, and token counts captured. Mode, model, version, and input sizes are propagated as trace attributes for fast filtering in the Langfuse UI.
-
-```python
-with langfuse.start_as_current_observation(
-    name=f"analyze.{request.mode}",
-    as_type="agent",
-    input={"mode": request.mode, "cv_text": ..., "jd_text": ...},
-), propagate_attributes(
-    trace_name=f"career-copilot.analyze.{request.mode}",
-    tags=["analyze", request.mode],
-    metadata={
-        "mode": request.mode,
-        "model": PRIMARY_MODEL,
-        "version": VERSION,
-        "cv_chars": str(len(request.cv_text)),
-        "jd_chars": str(len(request.jd_text)),
-    },
-):
-    state = await run_agent(root_agent, initial_state)
-```
+Every `/v1/analyze` run is traced end-to-end with Langfuse. Sub-agent calls, tool calls, latency, and token counts nest under a parent agent observation. The filterable trace attributes propagated to Langfuse carry only metadata and sizes (`mode`, `model`, `version`, `cv_chars`, `jd_chars`); raw CV and JD content is kept out of the trace tags so traces stay free of PII.
 
 ## Stack
 
